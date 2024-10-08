@@ -1,0 +1,10 @@
+{
+    "publicId": "616ed17a-7d5e-4a71-a79a-f89b29b38ff9",
+    "clientId": "my-client",
+    "venueId": "the-venue",
+    "startTimestamp": "2023-03-12T00:00:00Z",
+    "endTimestamp": "2023-03-12T00:00:00Z",
+    "createdAt": "2024-09-21T22:40:12.420786Z",
+    "createdBy": "http_client",
+    "updateBy": "http_client"
+}

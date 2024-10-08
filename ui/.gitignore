@@ -1,0 +1,5 @@
+nginx/conf.d/logs/
+nginx/conf.d/logs/access.log
+nginx/conf.d/logs/nginx.pid
+html/node_modules/
+html/node_modules/**

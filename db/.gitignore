@@ -1,0 +1,15 @@
+*
+/**
+!/.gitignore
+!Makefile
+!README.md
+
+!.env
+!init.sh
+
+!/testing/
+!/testing/**
+
+!/schemas/
+!/schemas/**
+

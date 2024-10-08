@@ -1,0 +1,17 @@
+*
+/**
+!/.gitignore
+!Makefile
+!README.md
+
+!.env
+!go.*
+!*.go
+
+
+!/testing/
+!/testing/**
+
+!/internal/
+!/internal/**
+

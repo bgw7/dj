@@ -1,0 +1,14 @@
+SELECT
+    public_id,
+    client_id,
+    venue_id,
+    start_timestamp,
+    end_timestamp,
+    created_at,
+    created_by,
+    created_with,
+    updated_at,
+    updated_by,
+    updated_with
+FROM
+    la_viajera.reservations;
