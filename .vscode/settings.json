@@ -1,0 +1,14 @@
+{
+    "go.testTags": "-godog.tags=@essential",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "local-postgres",
+            "database": "${DB_NAME}",
+            "username": "${USER}"
+        }
+    ]
+}
