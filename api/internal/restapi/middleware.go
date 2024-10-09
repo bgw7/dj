@@ -26,7 +26,7 @@ func djRoombaVoteMiddleware(next http.Handler) http.Handler {
 			handleError(w, fmt.Errorf("invalid trackID: %s", id))
 			return
 		}
-		ctx := context.WithValue(r.Context(), appcontext.DJRoombaVoteCTXKey, internal.Vote{
+		ctx := context.WithValue(r.Context(), appcontext.DJRoombaVoteCTXKey, &internal.Vote{
 			TrackID: trackId,
 			UserID:  r.Host,
 		})

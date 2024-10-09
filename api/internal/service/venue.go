@@ -13,7 +13,7 @@ func (d *DomainService) GetVenues(ctx context.Context) ([]internal.Venue, error)
 }
 
 func (d *DomainService) CreateVenue(ctx context.Context, obj *internal.Venue) (*internal.Venue, error) {
-	metdata, err := appcontext.Value[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
+	metdata, err := appcontext.FromContext[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
 	if err != nil {
 		return nil, err
 	}

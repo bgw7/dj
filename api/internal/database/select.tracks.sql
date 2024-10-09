@@ -9,7 +9,7 @@ SELECT
 	t.id,
 	t.url,
 	t.filename,
-	v.vote_count,
+	COALESCE(v.vote_count, 0) as vote_count,
 	t.created_by
 FROM
 	track_voting.tracks t

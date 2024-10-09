@@ -12,7 +12,7 @@ func (s *DomainService) ListTracks(ctx context.Context) ([]internal.Track, error
 }
 
 func (s *DomainService) CreatTrack(ctx context.Context, t internal.Track) (*internal.Track, error) {
-	m, err := appcontext.Value[internal.Metadata](ctx, appcontext.MetadataCTXKey)
+	m, err := appcontext.FromContext[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func (s *DomainService) CreatTrack(ctx context.Context, t internal.Track) (*inte
 }
 
 func (s *DomainService) CreateVote(ctx context.Context) error {
-	v, err := appcontext.Value[internal.Vote](ctx, appcontext.DJRoombaVoteCTXKey)
+	v, err := appcontext.FromContext[*internal.Vote](ctx, appcontext.DJRoombaVoteCTXKey)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (s *DomainService) CreateVote(ctx context.Context) error {
 }
 
 func (s *DomainService) DeleteVote(ctx context.Context) error {
-	v, err := appcontext.Value[internal.Vote](ctx, appcontext.DJRoombaVoteCTXKey)
+	v, err := appcontext.FromContext[*internal.Vote](ctx, appcontext.DJRoombaVoteCTXKey)
 	if err != nil {
 		return err
 	}

@@ -13,7 +13,7 @@ func (d *DomainService) GetReservations(ctx context.Context) ([]internal.Reserva
 }
 
 func (d *DomainService) CreateReservation(ctx context.Context, obj *internal.Reservation) (*internal.Reservation, error) {
-	metdata, err := appcontext.Value[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
+	metdata, err := appcontext.FromContext[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (d *DomainService) SearchReservations(ctx context.Context, s *internal.Rese
 }
 
 func (d *DomainService) FindOneReservation(ctx context.Context) (*internal.Reservation, error) {
-	id, err := appcontext.Value[string](ctx, appcontext.ReservationIDCTXKey)
+	id, err := appcontext.FromContext[string](ctx, appcontext.ReservationIDCTXKey)
 	if err != nil {
 		return nil, err
 	}
@@ -54,14 +54,14 @@ func (d *DomainService) FindOneReservation(ctx context.Context) (*internal.Reser
 }
 
 func (d *DomainService) UpdateReservation(ctx context.Context, r *internal.Reservation) (*internal.Reservation, error) {
-	id, err := appcontext.Value[string](ctx, appcontext.ReservationIDCTXKey)
+	id, err := appcontext.FromContext[string](ctx, appcontext.ReservationIDCTXKey)
 	if err != nil {
 		return nil, err
 	}
 
 	r.ID = &id
 
-	metadata, err := appcontext.Value[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
+	metadata, err := appcontext.FromContext[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
 	if err != nil {
 		return nil, err
 	}

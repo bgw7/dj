@@ -3,21 +3,22 @@ package database
 import (
 	"context"
 	_ "embed"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/la-viajera/reservation-service/internal"
 )
 
-// go:embed select.tracks.sql
+//go:embed select.tracks.sql
 var tracksSelect string
 
-// go:embed insert.tracks.sql
+//go:embed insert.tracks.sql
 var tracksInsert string
 
-// go:embed delete.votes.sql
+//go:embed delete.votes.sql
 var votesDelete string
 
-// go:embed insert.votes.sql
+//go:embed insert.votes.sql
 var votesInsert string
 
 func (db *Database) ListTracks(ctx context.Context) ([]internal.Track, error) {
@@ -29,12 +30,13 @@ func (db *Database) ListTracks(ctx context.Context) ([]internal.Track, error) {
 }
 
 func (db *Database) CreateTrack(ctx context.Context, track internal.Track) error {
-	_, err := db.conn.Exec(
+	t, err := db.conn.Exec(
 		ctx,
 		tracksInsert,
 		track.Url,
 		track.CreatedBy,
 	)
+	fmt.Print(t)
 	return err
 }
 

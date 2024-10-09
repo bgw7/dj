@@ -7,8 +7,9 @@
             "port": 5432,
             "driver": "PostgreSQL",
             "name": "local-postgres",
-            "database": "${DB_NAME}",
-            "username": "${USER}"
+            "database": "laptop_database",
+            "username": "Ben",
+            "password": "postgres"
         }
     ]
 }

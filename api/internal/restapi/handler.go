@@ -73,11 +73,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		})
 	})
 
-	r.Route("/djroomba", func(r chi.Router) {
+	r.Route("/tracks", func(r chi.Router) {
 		r.Use(metdataMiddleware)
 		r.Get("/", handleOut(h.service.ListTracks, http.StatusOK))
 		r.Post("/", handleInOut(h.service.CreatTrack, http.StatusCreated))
-		r.Route("/{trackId}", func(r chi.Router) {
+		r.Route("/{trackId}/votes", func(r chi.Router) {
 			r.Use(djRoombaVoteMiddleware)
 			r.Post("/", handleNil(h.service.CreateVote, http.StatusCreated))
 			r.Delete("/", handleNil(h.service.DeleteVote, http.StatusOK))
