@@ -89,6 +89,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				}
 				fmt.Println(v)
 				w.WriteHeader(http.StatusOK)
+				err = json.NewEncoder(w).Encode(v)
+				if err != nil {
+					handleError(w, err)
+					return
+				}
 			})
 		})
 		r.Route("/{trackId}/votes", func(r chi.Router) {
