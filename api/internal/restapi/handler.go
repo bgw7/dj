@@ -3,12 +3,14 @@ package restapi
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/la-viajera/reservation-service/internal"
+	"github.com/la-viajera/reservation-service/internal/termux"
 )
 
 type ReservationService interface {
@@ -77,6 +79,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r.Use(metdataMiddleware)
 		r.Get("/", handleOut(h.service.ListTracks, http.StatusOK))
 		r.Post("/", handleInOut(h.service.CreatTrack, http.StatusCreated))
+		r.Route("/dl/{url}", func(r chi.Router) {
+			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				url := chi.URLParam(r, "url")
+				v, err := termux.YoutubeDownload(url)
+				if err != nil {
+					handleError(w, err)
+					return
+				}
+				fmt.Println(v)
+				w.WriteHeader(http.StatusOK)
+			})
+		})
 		r.Route("/{trackId}/votes", func(r chi.Router) {
 			r.Use(djRoombaVoteMiddleware)
 			r.Post("/", handleNil(h.service.CreateVote, http.StatusCreated))

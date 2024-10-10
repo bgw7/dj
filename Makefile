@@ -36,3 +36,9 @@ start: db-start api-start ## Start DB, API
 	print db, api ready!
 	
 stop: db-stop ui-stop
+
+wifi-ip: ## Get this machines wifi router IP
+	ipconfig getifaddr en0
+
+termux: ## start termux container
+	docker run -it termux/termux-docker:latest

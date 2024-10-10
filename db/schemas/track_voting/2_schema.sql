@@ -23,7 +23,5 @@ CREATE TABLE IF NOT EXISTS votes (
   UNIQUE(track_id, user_id)
 );
 
-
-
-GRANT ALL ON TABLE track_voting.tracks TO api_user WITH GRANT OPTION;
-GRANT ALL ON TABLE track_voting.votes TO api_user WITH GRANT OPTION;
+GRANT ALL ON TABLE tracks TO api_user WITH GRANT OPTION;
+GRANT ALL ON TABLE votes TO api_user WITH GRANT OPTION;
