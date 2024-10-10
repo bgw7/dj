@@ -1,18 +1,34 @@
 package termux
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
-func YoutubeDownload(youtubeShareLink string) (string, error) {
-	fmt.Println("starting termux cmd")
+type OpenerResponse struct {
+	Filname string `json:"Filename"`
+	Url     string `json:"URL"`
+}
+
+func YoutubeDownload(youtubeShareLink string) (*OpenerResponse, error) {
+	fmt.Println("starting termux-url-opener")
 	out, err := exec.Command("termux-url-opener", youtubeShareLink).Output()
-	fmt.Println("out from youtube download", string(out))
+
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(out), err
+
+	sl := strings.Split(string(out), `\n`)
+	invalidJSON := sl[len(sl)-2]
+	validJSON := bytes.ReplaceAll([]byte(invalidJSON), []byte("'"), []byte("\""))
+
+	var obj OpenerResponse
+	err = json.Unmarshal(validJSON, &obj)
+
+	return &obj, err
 }
 
 func MediaPlayer(mediaFile string) error {
