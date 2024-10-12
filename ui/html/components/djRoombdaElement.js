@@ -61,14 +61,13 @@ export class DJRoombaElement extends LitElement {
 
     ${this.songTracks.map((it) => {
       return html`      
-      <button @click=${() => this.createVote(it.id)}>vote</button>
+      <button @click=${() => alert(it.id)}> tell id </button>
+      <button @click=${() => this.createVote(it.id)}> </button>
       <br/>
-          <p>${it.id}</p>
-          <p>${it.url}</p>
-          <p>${it.filename}</p>
-          <p>${it.voteCount}</p>
-          <p>${it.hasPlayed}</p>
-          <p>${it.createdBy}</p>
+      <div class="tablet-menu-body" @swipe=${() => alert("cat & dog")}>
+        <p>${it.url}</p>
+        <p>${it.voteCount}</p>
+      </div>
       `
     }
     )}

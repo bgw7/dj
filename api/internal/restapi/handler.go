@@ -82,7 +82,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r.Route("/dl", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				url := r.Header.Get("url")
-				v, err := termux.YoutubeDownload(url)
+				v, err := termux.YoutubeDownload(r.Context(), url)
 				if err != nil {
 					handleError(w, err)
 					return

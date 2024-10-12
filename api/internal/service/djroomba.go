@@ -5,6 +5,7 @@ import (
 
 	"github.com/la-viajera/reservation-service/internal"
 	"github.com/la-viajera/reservation-service/internal/appcontext"
+	"github.com/la-viajera/reservation-service/internal/termux"
 )
 
 func (s *DomainService) ListTracks(ctx context.Context) ([]internal.Track, error) {
@@ -34,4 +35,23 @@ func (s *DomainService) DeleteVote(ctx context.Context) error {
 		return err
 	}
 	return s.datastore.DeleteVote(ctx, v.TrackID, v.UserID)
+}
+
+// get SMS
+// for each
+// ID not in map
+// body is https://
+// download
+//   - err into chan
+//   - return filename into chan
+//
+// err chan -> termux notify
+// filename chan -> upsert DB tracks
+func (s *DomainService) StartTracksPolling(ctx context.Context) error {
+	_, err := termux.GetTextMessages(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

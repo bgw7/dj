@@ -2,6 +2,7 @@ package termux
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -13,9 +14,9 @@ type OpenerResponse struct {
 	Url     string `json:"URL"`
 }
 
-func YoutubeDownload(youtubeShareLink string) (*OpenerResponse, error) {
+func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerResponse, error) {
 	fmt.Println("starting termux-url-opener")
-	out, err := exec.Command("termux-url-opener", youtubeShareLink).Output()
+	out, err := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink).Output()
 
 	if err != nil {
 		return nil, err
@@ -31,12 +32,38 @@ func YoutubeDownload(youtubeShareLink string) (*OpenerResponse, error) {
 	return &obj, err
 }
 
-func MediaPlayer(mediaFile string) error {
-	_, err := exec.Command("termux-media-player", "play", mediaFile).Output()
+func MediaPlayer(ctx context.Context, mediaFile string) error {
+	_, err := exec.CommandContext(ctx, "termux-media-player", "play", mediaFile).Output()
 	return err
 }
 
-func Notify(content string) error {
-	_, err := exec.Command("termux-notification", "-c", content).Output()
+func Notify(ctx context.Context, content string) error {
+	_, err := exec.CommandContext(ctx, "termux-notification", "-c", content).Output()
 	return err
+}
+
+type TextMessage struct {
+	ThreadID int    `json:"threadid"`
+	Body     string `json:"body"`
+}
+
+func GetTextMessages(ctx context.Context) ([]TextMessage, error) {
+	cmd := exec.CommandContext(ctx, "termux-sms-list")
+	out, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+	var msgs []TextMessage
+	if err := json.NewDecoder(out).Decode(&msgs); err != nil {
+		return nil, err
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return nil, err
+	}
+
+	return msgs, err
 }

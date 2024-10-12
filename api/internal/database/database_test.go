@@ -82,12 +82,16 @@ func (m mockRows) Scan(dest ...any) error {
 type mockConn struct {
 	queryRow func(ctx context.Context, query string, args ...any) pgx.Row
 	query    func(ctx context.Context, query string, args ...any) (pgx.Rows, error)
+	exec     func(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
 }
 
 func (m *mockConn) Query(ctx context.Context, query string, args ...any) (pgx.Rows, error) {
 	return m.query(ctx, query, args...)
 }
 
+func (m *mockConn) Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error) {
+	return m.exec(ctx, query, args...)
+}
 func (m *mockConn) QueryRow(ctx context.Context, query string, args ...any) pgx.Row {
 	return m.queryRow(ctx, query, args...)
 }
@@ -221,7 +225,7 @@ func TestDB_FindOne(t *testing.T) {
 			// t.Parallel()
 
 			db := NewDB(tt.fields.conn)
-			got, err := db.FindOne(context.Background(), tt.args.id)
+			got, err := db.FindReservation(context.Background(), tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DB.FindOne() error = %v, wantErr %v", err, tt.wantErr)
 				return
