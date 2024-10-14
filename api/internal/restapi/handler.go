@@ -13,21 +13,6 @@ import (
 	"github.com/la-viajera/reservation-service/internal/termux"
 )
 
-type ReservationService interface {
-	GetReservations(ctx context.Context) ([]internal.Reservation, error)
-	CreateReservation(ctx context.Context, obj *internal.Reservation) (*internal.Reservation, error)
-	SearchReservations(ctx context.Context, s *internal.ReservationSearch) (*internal.PagedResponse[internal.Reservation], error)
-	FindOneReservation(ctx context.Context) (*internal.Reservation, error)
-	UpdateReservation(ctx context.Context, r *internal.Reservation) (*internal.Reservation, error)
-}
-
-type VenueService interface {
-	GetVenues(ctx context.Context) ([]internal.Venue, error)
-	CreateVenue(ctx context.Context, obj *internal.Venue) (*internal.Venue, error)
-	SuggestVenues(ctx context.Context, query string) (*internal.PagedResponse[internal.Venue], error)
-	SearchVenues(ctx context.Context, s *internal.VenueSearch) (*internal.PagedResponse[internal.Venue], error)
-}
-
 type DJRoombaService interface {
 	ListTracks(ctx context.Context) ([]internal.Track, error)
 	CreatTrack(ctx context.Context, t internal.Track) (*internal.Track, error)
@@ -36,8 +21,6 @@ type DJRoombaService interface {
 }
 
 type Service interface {
-	ReservationService
-	VenueService
 	DJRoombaService
 }
 
@@ -63,18 +46,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(10 * time.Second))
 	// RESTy routes for domain model
-	r.Route("/reservations", func(r chi.Router) {
-		r.Get("/", handleOut(h.service.GetReservations, http.StatusOK))
-		r.Post("/", handleInOut(h.service.CreateReservation, http.StatusCreated))
-		r.Post("/search", handleInOut(h.service.SearchReservations, http.StatusOK))
-		// Subrouters:  /reservations/123/
-		r.Route("/{reservationID}", func(r chi.Router) {
-			r.Use(h.reservationIDMiddleware)
-			r.Get("/", handleOut(h.service.FindOneReservation, http.StatusOK))
-			r.Patch("/", handleInOut(h.service.UpdateReservation, http.StatusOK))
-		})
-	})
-
 	r.Route("/tracks", func(r chi.Router) {
 		r.Use(metdataMiddleware)
 		r.Get("/", handleOut(h.service.ListTracks, http.StatusOK))
@@ -102,31 +73,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			r.Delete("/", handleNil(h.service.DeleteVote, http.StatusOK))
 		})
 	})
-
-	r.Route("/venues", func(r chi.Router) {
-		r.Get("/", handleOut(h.service.GetVenues, http.StatusOK))
-		r.Post("/", handleInOut(h.service.CreateVenue, http.StatusCreated))
-		r.Post("/search", handleInOut(h.service.SearchVenues, http.StatusOK))
-		r.Post("/suggestions", h.suggestVenues)
-		// Subrouters:  /venues/123/
-		r.Route("/{reservationID}", func(r chi.Router) {
-			// r.Use(venueCtx....
-			// r.Get("/", ...
-			// r.Patch("/", ...
-		})
-	})
 	r.ServeHTTP(w, req)
-}
-
-func (h *Handler) suggestVenues(w http.ResponseWriter, req *http.Request) {
-	q := chi.URLParam(req, "q")
-	page, err := h.service.SuggestVenues(req.Context(), q)
-	if err != nil {
-		handleError(w, err)
-		return
-	}
-	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(page)
 }
 
 type targetFunc[In any, Out any] func(context.Context, In) (Out, error)

@@ -11,13 +11,6 @@ import (
 	"github.com/la-viajera/reservation-service/internal/appcontext"
 )
 
-func (h *Handler) reservationIDMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "reservationID")
-		ctx := context.WithValue(r.Context(), appcontext.ReservationIDCTXKey, id)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
 func djRoombaVoteMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "trackId")
@@ -45,10 +38,6 @@ func metdataMiddleware(next http.Handler) http.Handler {
 
 		// call the next handler in the chain, passing the response writer and
 		// the updated request object with the new context value.
-		//
-		// note: context.Context values are nested, so any previously set
-		// values will be accessible as well, and the new `"metadataCTXKey"` key
-		// will be accessible from this point forward.
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
