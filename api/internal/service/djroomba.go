@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -100,7 +101,8 @@ func (srv *DomainService) saveTrack(ctx context.Context, threadID int, body, fro
 				return err
 			}
 			slog.InfoContext(ctx, "saving track to DB", "file", r.Filname, "from", fromNumber, "playerDir", "/storage/emulated/0/Termux_Downloader/Youtube/"+r.Filname)
-			err = termux.MediaPlayer(ctx, "/storage/emulated/0/Termux_Downloader/Youtube/"+r.Filname)
+			path := filepath.Join("/storage/emulated/0/Termux_Downloader/Youtube/", r.Filname)
+			err = termux.MediaPlayer(ctx, path)
 			if err != nil {
 				return err
 			}
