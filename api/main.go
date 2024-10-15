@@ -63,20 +63,17 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", h))
+	eg, ctx := errgroup.WithContext(ctx)
 
-	if err := lisenOnTextMsgs(ctx, srv); err != nil {
-		slog.ErrorContext(ctx, "sms poller error", "error", err)
-		// os.Exit(1)
-	}
-
-	if err := listenAndServe(ctx, mux); err != nil {
-		slog.ErrorContext(ctx, "listenAndServe() err", "error", err)
-		// os.Exit(1)
+	lisenOnTextMsgs(ctx, srv, eg)
+	listenAndServe(ctx, mux, eg)
+	if err := eg.Wait(); err != nil {
+		slog.ErrorContext(ctx, "errgroup err", "error", err)
+		os.Exit(1)
 	}
 }
 
-func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService) error {
-	eg, ctx := errgroup.WithContext(ctx)
+func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService, eg *errgroup.Group) {
 	eg.Go(func() error {
 		return srv.RunSmsPoller(ctx)
 	})
@@ -94,16 +91,13 @@ func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService) error {
 		defer cancel()
 		return termux.MediaStop(shutdownCtx)
 	})
-
-	return eg.Wait()
 }
 
-func listenAndServe(ctx context.Context, h *http.ServeMux) error {
+func listenAndServe(ctx context.Context, h *http.ServeMux, eg *errgroup.Group) {
 	s := &http.Server{
 		Addr:    net.JoinHostPort(c.Host, c.Port),
 		Handler: h,
 	}
-	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		slog.InfoContext(ctx, "starting http server", "address", s.Addr)
 		return s.ListenAndServe()
@@ -123,6 +117,4 @@ func listenAndServe(ctx context.Context, h *http.ServeMux) error {
 		defer cancel()
 		return s.Shutdown(shutdownCtx)
 	})
-
-	return eg.Wait()
 }
