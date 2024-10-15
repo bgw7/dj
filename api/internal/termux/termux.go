@@ -50,6 +50,8 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 }
 
 func MediaPlayer(ctx context.Context, mediaFile string) error {
+	println("termux media play cmd")
+	println(mediaFile)
 	out, err := exec.CommandContext(ctx, "termux-media-player", "play", mediaFile).CombinedOutput()
 	return fmt.Errorf("termux media player %s failed: %w", string(out), err)
 }
