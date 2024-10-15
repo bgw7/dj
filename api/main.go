@@ -16,6 +16,7 @@ import (
 	"github.com/bgw7/dj/internal/database"
 	"github.com/bgw7/dj/internal/restapi"
 	"github.com/bgw7/dj/internal/service"
+	"github.com/bgw7/dj/internal/termux"
 	"github.com/charmbracelet/log"
 )
 
@@ -63,9 +64,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", h))
 
-	err = srv.RunSmsPoller(ctx)
-	if err != nil {
-		slog.ErrorContext(ctx, "sms polling with audio download failed", "error", err)
+	if err := lisenOnTextMsgs(ctx, srv); err != nil {
+		slog.ErrorContext(ctx, "sms poller error", "error", err)
+		os.Exit(1)
 	}
 
 	if err := listenAndServe(ctx, mux); err != nil {
@@ -73,6 +74,31 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService) error {
+	eg, ctx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		return srv.RunSmsPoller(ctx)
+})
+	
+
+	eg.Go(func() error {
+		<- ctx.Done()
+slog.InfoContext(
+			ctx,
+			"context is done. shutting sms poller",
+			"contextErr",
+			ctx.Err(),
+			"timeout",
+			shutdownTimeout,
+		)
+shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+defer cancel()
+return termux.MediaStop(shutdownCtx)
+)
+
+return eg.Wait()
+
 
 func listenAndServe(ctx context.Context, h *http.ServeMux) error {
 	s := &http.Server{

@@ -58,6 +58,11 @@ func MediaInfo(ctx context.Context) (string, error) {
 	return string(out), nil
 }
 
+func MediaStop(ctx context.Context) error {
+	_, err := exec.CommandContext(ctx, "termux-media-player", "stop").CombinedOutput()
+	return err
+}
+
 func MediaPlay(ctx context.Context, mediaFile string) error {
 	out, err := exec.CommandContext(ctx, "termux-media-player", "play", mediaFile).CombinedOutput()
 	if err != nil {
