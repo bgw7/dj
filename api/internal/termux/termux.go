@@ -17,7 +17,7 @@ type OpenerResponse struct {
 
 func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerResponse, error) {
 	slog.InfoContext(ctx, "starting termux-url-opener", "youtubeShareLink", youtubeShareLink)
-	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink).Output()
+	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
