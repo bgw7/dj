@@ -1,13 +1,13 @@
 package termux
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os/exec"
-	"strings"
 )
 
 type OpenerResponse struct {
@@ -17,14 +17,31 @@ type OpenerResponse struct {
 
 func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerResponse, error) {
 	slog.InfoContext(ctx, "starting termux-url-opener", "youtubeShareLink", youtubeShareLink)
-	out, err := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink).Output()
+	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink).Output()
+
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, fmt.Errorf("termux url opener failed: %w", err)
+		panic(err)
 	}
-	slog.InfoContext(ctx, "termux-url-opener output", "stdout", string(out))
-	sl := strings.Split(string(out), `\n`)
-	invalidJSON := sl[len(sl)-2]
-	validJSON := bytes.ReplaceAll([]byte(invalidJSON), []byte("'"), []byte("\""))
+
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+
+	scanner := bufio.NewScanner(stdout)
+	var lastLine string
+	for scanner.Scan() {
+		lastLine = scanner.Text()
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		panic(err)
+	}
+	validJSON := bytes.ReplaceAll([]byte(lastLine), []byte("'"), []byte("\""))
 
 	var obj OpenerResponse
 	err = json.Unmarshal(validJSON, &obj)
