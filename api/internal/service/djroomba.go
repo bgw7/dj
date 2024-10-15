@@ -82,7 +82,6 @@ func (srv *DomainService) smsPoll(ctx context.Context) error {
 	}
 	for _, m := range msgs {
 		eg.Go(func() error {
-			slog.InfoContext(ctx, "handling msg", m.Body, m.FromNumber)
 			return srv.saveTrack(ctx, m.ThreadID, m.Body, m.FromNumber)
 		})
 	}
@@ -91,9 +90,10 @@ func (srv *DomainService) smsPoll(ctx context.Context) error {
 
 func (srv *DomainService) saveTrack(ctx context.Context, threadID int, body, fromNumber string) error {
 	_, ok := srv.readMsgs.Load(threadID)
+	slog.InfoContext(ctx, "srv.readMsgs.Load(threadID)", "ok", ok, "threadID", threadID)
 	if !ok {
 		srv.readMsgs.Store(threadID, "")
-		slog.InfoContext(ctx, "msg put into mutex Map", body, fromNumber)
+		slog.InfoContext(ctx, "msg put into mutex Map", "body", body, "fromNumber", fromNumber)
 		if strings.Contains(body, "https://") {
 			slog.InfoContext(ctx, "msg contains https://", "body", body)
 			url := strings.TrimSpace(body)
