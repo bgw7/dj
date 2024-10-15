@@ -83,31 +83,31 @@ func (srv *DomainService) smsPoll(ctx context.Context) error {
 	for _, m := range msgs {
 		eg.Go(func() error {
 			slog.InfoContext(ctx, "handling msg", m.Body, m.FromNumber)
-			return srv.saveTrack(ctx, &m)
+			return srv.saveTrack(ctx, m.ThreadID, m.Body, m.FromNumber)
 		})
 	}
 	return eg.Wait()
 }
 
-func (srv *DomainService) saveTrack(ctx context.Context, m *termux.TextMessage) error {
-	_, ok := srv.readMsgs.Load(m.ThreadID)
+func (srv *DomainService) saveTrack(ctx context.Context, threadID int, body, fromNumber string) error {
+	_, ok := srv.readMsgs.Load(threadID)
 	if !ok {
-		srv.readMsgs.Store(m.ThreadID, "")
-		slog.InfoContext(ctx, "msg put into mutex Map", m.Body, m.FromNumber)
-		if strings.Contains(m.Body, "https://") {
-			slog.InfoContext(ctx, "msg contains https://", m.Body)
-			url := strings.TrimSpace(m.Body)
+		srv.readMsgs.Store(threadID, "")
+		slog.InfoContext(ctx, "msg put into mutex Map", body, fromNumber)
+		if strings.Contains(body, "https://") {
+			slog.InfoContext(ctx, "msg contains https://", "body", body)
+			url := strings.TrimSpace(body)
 			r, err := termux.YoutubeDownload(ctx, url)
 			if err != nil {
 				return err
 			}
-			slog.InfoContext(ctx, "saving track to DB", "file", r.Filname, "from", m.FromNumber)
+			slog.InfoContext(ctx, "saving track to DB", "file", r.Filname, "from", fromNumber)
 			return srv.datastore.CreateTrack(
 				ctx,
 				&internal.Track{
 					Url:       url,
 					Filename:  &r.Filname,
-					CreatedBy: m.FromNumber,
+					CreatedBy: fromNumber,
 				})
 		}
 	}
