@@ -99,8 +99,8 @@ func (srv *DomainService) saveTrack(ctx context.Context, threadID int, body, fro
 			if err != nil {
 				return err
 			}
-			slog.InfoContext(ctx, "saving track to DB", "file", r.Filname, "from", fromNumber, "playerDir", "/storage/emulated/0/Termux_Downloader/Youtube"+r.Filname)
-			err = termux.MediaPlayer(ctx, "/storage/emulated/0/Termux_Downloader/Youtube"+r.Filname)
+			slog.InfoContext(ctx, "saving track to DB", "file", r.Filname, "from", fromNumber, "playerDir", "/storage/emulated/0/Termux_Downloader/Youtube/"+r.Filname)
+			err = termux.MediaPlayer(ctx, "/storage/emulated/0/Termux_Downloader/Youtube/"+r.Filname)
 			if err != nil {
 				return err
 			}
