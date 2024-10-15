@@ -21,11 +21,11 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if err := cmd.Start(); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	scanner := bufio.NewScanner(stdout)
@@ -35,12 +35,13 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 	}
 
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if err := cmd.Wait(); err != nil {
-		panic(err)
+		return nil, err
 	}
+
 	validJSON := bytes.ReplaceAll([]byte(lastLine), []byte("'"), []byte("\""))
 
 	var obj OpenerResponse
@@ -49,9 +50,15 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 	return &obj, err
 }
 
-func MediaPlayer(ctx context.Context, mediaFile string) error {
-	println("termux media play cmd")
-	println(mediaFile)
+func MediaInfo(ctx context.Context) (string, error) {
+	out, err := exec.CommandContext(ctx, "termux-media-player", "info").CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("termux media info failed: %s\n %w", string(out), err)
+	}
+	return string(out), nil
+}
+
+func MediaPlay(ctx context.Context, mediaFile string) error {
 	out, err := exec.CommandContext(ctx, "termux-media-player", "play", mediaFile).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("termux media player failed: %s\n %w", string(out), err)
