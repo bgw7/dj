@@ -66,12 +66,12 @@ func main() {
 
 	if err := lisenOnTextMsgs(ctx, srv); err != nil {
 		slog.ErrorContext(ctx, "sms poller error", "error", err)
-		os.Exit(1)
+		// os.Exit(1)
 	}
 
 	if err := listenAndServe(ctx, mux); err != nil {
 		slog.ErrorContext(ctx, "listenAndServe() err", "error", err)
-		os.Exit(1)
+		// os.Exit(1)
 	}
 }
 
@@ -79,12 +79,10 @@ func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService) error {
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
 		return srv.RunSmsPoller(ctx)
-})
-	
-
+	})
 	eg.Go(func() error {
-		<- ctx.Done()
-slog.InfoContext(
+		<-ctx.Done()
+		slog.InfoContext(
 			ctx,
 			"context is done. shutting sms poller",
 			"contextErr",
@@ -92,13 +90,13 @@ slog.InfoContext(
 			"timeout",
 			shutdownTimeout,
 		)
-shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-defer cancel()
-return termux.MediaStop(shutdownCtx)
-)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+		return termux.MediaStop(shutdownCtx)
+	})
 
-return eg.Wait()
-
+	return eg.Wait()
+}
 
 func listenAndServe(ctx context.Context, h *http.ServeMux) error {
 	s := &http.Server{
