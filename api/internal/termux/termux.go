@@ -53,7 +53,8 @@ func MediaPlayer(ctx context.Context, mediaFile string) error {
 	println("termux media play cmd")
 	println(mediaFile)
 	out, err := exec.CommandContext(ctx, "termux-media-player", "play", mediaFile).CombinedOutput()
-	return fmt.Errorf("termux media player %s failed: %w", string(out), err)
+	slog.InfoContext(ctx, "termux-media-player output", "out", string(out))
+	return fmt.Errorf("termux media player failed: %w", err)
 }
 
 func Notify(ctx context.Context, content string) error {
