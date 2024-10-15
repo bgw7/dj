@@ -21,7 +21,7 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 	if err != nil {
 		return nil, fmt.Errorf("termux url opener failed: %w", err)
 	}
-	slog.InfoContext(ctx, "termux-url-opener output", "stdout", out)
+	slog.InfoContext(ctx, "termux-url-opener output", "stdout", string(out))
 	sl := strings.Split(string(out), `\n`)
 	invalidJSON := sl[len(sl)-2]
 	validJSON := bytes.ReplaceAll([]byte(invalidJSON), []byte("'"), []byte("\""))

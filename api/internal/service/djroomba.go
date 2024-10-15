@@ -59,7 +59,6 @@ func (srv *DomainService) RunSmsPoller(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C:
-			slog.InfoContext(ctx, "reading sms inbox")
 			err := srv.smsPoll(ctx)
 			if err != nil {
 				slog.ErrorContext(ctx, "sms poller error", "error", err)
@@ -90,11 +89,10 @@ func (srv *DomainService) smsPoll(ctx context.Context) error {
 
 func (srv *DomainService) saveTrack(ctx context.Context, threadID int, body, fromNumber string) error {
 	_, ok := srv.readMsgs.Load(threadID)
-	slog.InfoContext(ctx, "srv.readMsgs.Load(threadID)", "ok", ok, "threadID", threadID)
 	if !ok {
 		srv.readMsgs.Store(threadID, "")
-		slog.InfoContext(ctx, "msg put into mutex Map", "body", body, "fromNumber", fromNumber)
 		if strings.Contains(body, "https://") {
+			slog.InfoContext(ctx, "srv.readMsgs.Load(threadID)", "ok", ok, "threadID", threadID)
 			slog.InfoContext(ctx, "msg contains https://", "body", body)
 			url := strings.TrimSpace(body)
 			r, err := termux.YoutubeDownload(ctx, url)
