@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os/exec"
 	"strings"
 )
@@ -15,11 +16,12 @@ type OpenerResponse struct {
 }
 
 func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerResponse, error) {
+	slog.InfoContext(ctx, "starting termux-url-opener", "youtubeShareLink", youtubeShareLink)
 	out, err := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink).Output()
 	if err != nil {
 		return nil, fmt.Errorf("termux url opener failed: %w", err)
 	}
-
+	slog.InfoContext(ctx, "termux-url-opener output", "stdout", out)
 	sl := strings.Split(string(out), `\n`)
 	invalidJSON := sl[len(sl)-2]
 	validJSON := bytes.ReplaceAll([]byte(invalidJSON), []byte("'"), []byte("\""))
