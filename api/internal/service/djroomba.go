@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"strings"
 	"time"
@@ -76,8 +77,12 @@ func (srv *DomainService) smsPoll(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	if len(msgs) == 0 {
+		return errors.New("length of messages from inbox is 0")
+	}
 	for _, m := range msgs {
 		eg.Go(func() error {
+			slog.InfoContext(ctx, "handling msg", m.Body, m.FromNumber)
 			return srv.saveTrack(ctx, &m)
 		})
 	}
