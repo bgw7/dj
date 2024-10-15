@@ -13,10 +13,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/bgw7/dj/internal/database"
+	"github.com/bgw7/dj/internal/restapi"
+	"github.com/bgw7/dj/internal/service"
 	"github.com/charmbracelet/log"
-	"github.com/la-viajera/reservation-service/internal/database"
-	"github.com/la-viajera/reservation-service/internal/restapi"
-	"github.com/la-viajera/reservation-service/internal/service"
 )
 
 const shutdownTimeout = 3 * time.Second
@@ -62,6 +62,11 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", h))
+
+	err = srv.RunSmsPoller(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "sms polling with audio download failed", "error", err)
+	}
 
 	if err := listenAndServe(ctx, mux); err != nil {
 		slog.ErrorContext(ctx, "listenAndServe() err", "error", err)

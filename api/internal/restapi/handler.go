@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bgw7/dj/internal"
+	"github.com/bgw7/dj/internal/termux"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/la-viajera/reservation-service/internal"
-	"github.com/la-viajera/reservation-service/internal/termux"
 )
 
 type DJRoombaService interface {
 	ListTracks(ctx context.Context) ([]internal.Track, error)
-	CreatTrack(ctx context.Context, t internal.Track) (*internal.Track, error)
+	CreatTrack(ctx context.Context, t *internal.Track) (*internal.Track, error)
 	CreateVote(ctx context.Context) error
 	DeleteVote(ctx context.Context) error
 }

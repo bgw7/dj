@@ -1,4 +1,4 @@
-module github.com/la-viajera/reservation-service
+module github.com/bgw7/dj
 
 go 1.22.1
 

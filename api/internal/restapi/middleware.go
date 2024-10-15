@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bgw7/dj/internal"
+	"github.com/bgw7/dj/internal/appcontext"
 	"github.com/go-chi/chi/v5"
-	"github.com/la-viajera/reservation-service/internal"
-	"github.com/la-viajera/reservation-service/internal/appcontext"
 )
 
 func djRoombaVoteMiddleware(next http.Handler) http.Handler {

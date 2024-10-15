@@ -5,8 +5,8 @@ import (
 	_ "embed"
 	"fmt"
 
+	"github.com/bgw7/dj/internal"
 	"github.com/jackc/pgx/v5"
-	"github.com/la-viajera/reservation-service/internal"
 )
 
 //go:embed select.tracks.sql
@@ -29,11 +29,12 @@ func (db *Database) ListTracks(ctx context.Context) ([]internal.Track, error) {
 	return pgx.CollectRows(rows, pgx.RowToStructByNameLax[internal.Track])
 }
 
-func (db *Database) CreateTrack(ctx context.Context, track internal.Track) error {
+func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) error {
 	t, err := db.conn.Exec(
 		ctx,
 		tracksInsert,
 		track.Url,
+		track.Filename,
 		track.CreatedBy,
 	)
 	fmt.Print(t)

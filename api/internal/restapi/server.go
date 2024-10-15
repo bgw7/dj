@@ -9,7 +9,7 @@ import (
 
 	"errors"
 
-	"github.com/la-viajera/reservation-service/internal"
+	"github.com/bgw7/dj/internal"
 )
 
 // handleError provides JSON response body and HTTP
@@ -26,7 +26,7 @@ func handleError(w http.ResponseWriter, err error) {
 		code = http.StatusBadRequest
 	case errors.As(err, &parseError):
 		code = http.StatusBadRequest
-	case errors.Is(err, internal.RecordNotFoundErr):
+	case errors.Is(err, internal.ErrRecordNotFound):
 		code = http.StatusNotFound
 	default:
 		slog.Error("http internal server error", "error", err)
