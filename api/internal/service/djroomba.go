@@ -94,6 +94,7 @@ func (srv *DomainService) saveTrack(ctx context.Context, m *termux.TextMessage) 
 			if err != nil {
 				return err
 			}
+			slog.InfoContext(ctx, "saving track to DB", "file", r.Filname, "from", m.FromNumber)
 			return srv.datastore.CreateTrack(
 				ctx,
 				&internal.Track{
