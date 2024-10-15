@@ -53,13 +53,18 @@ func MediaPlayer(ctx context.Context, mediaFile string) error {
 	println("termux media play cmd")
 	println(mediaFile)
 	out, err := exec.CommandContext(ctx, "termux-media-player", "play", mediaFile).CombinedOutput()
-	slog.InfoContext(ctx, "termux-media-player output", "out", string(out))
-	return fmt.Errorf("termux media player failed: %w", err)
+	if err != nil {
+		return fmt.Errorf("termux media player failed: %s\n %w", string(out), err)
+	}
+	return nil
 }
 
 func Notify(ctx context.Context, content string) error {
-	_, err := exec.CommandContext(ctx, "termux-notification", "-c", content).Output()
-	return fmt.Errorf("termux notification failed: %w", err)
+	out, err := exec.CommandContext(ctx, "termux-notification", "-c", content).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("termux notification failed: %s\n %w", string(out), err)
+	}
+	return nil
 }
 
 type TextMessage struct {
