@@ -93,7 +93,9 @@ func (srv *DomainService) saveTrack(ctx context.Context, m *termux.TextMessage) 
 	_, ok := srv.readMsgs.Load(m.ThreadID)
 	if !ok {
 		srv.readMsgs.Store(m.ThreadID, "")
+		slog.InfoContext(ctx, "msg put into mutex Map", m.Body, m.FromNumber)
 		if strings.Contains(m.Body, "https://") {
+			slog.InfoContext(ctx, "msg contains https://", m.Body)
 			url := strings.TrimSpace(m.Body)
 			r, err := termux.YoutubeDownload(ctx, url)
 			if err != nil {
