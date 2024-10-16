@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	_ "embed"
+	"fmt"
 
 	"github.com/bgw7/dj/internal"
 	"github.com/jackc/pgx/v5"
@@ -27,7 +28,7 @@ var votesInsert string
 func (db *Database) ListTracks(ctx context.Context) ([]internal.Track, error) {
 	rows, err := db.conn.Query(ctx, tracksSelect)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list tracks query failed: %w", err)
 	}
 	return pgx.CollectRows(rows, pgx.RowToStructByNameLax[internal.Track])
 }

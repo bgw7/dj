@@ -78,24 +78,7 @@ func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService, eg *errgro
 		return srv.RunSmsPoller(ctx)
 	})
 	eg.Go(func() error {
-		return srv.RunPlayNext(ctx)INSERT INTO tracks (
-			id,
-			url,
-			url,
-			filename,
-			has_played,
-			created_by,
-			created_at
-		  )
-		VALUES (
-			id:integer,
-			'url:character varying',
-			'url:character varying',
-			'filename:character varying',
-			has_played:boolean,
-			'created_by:character varying',
-			'created_at:timestamp without time zone'
-		  );
+		return srv.RunPlayNext(ctx)
 	})
 	eg.Go(func() error {
 		<-ctx.Done()

@@ -83,7 +83,7 @@ func Notify(ctx context.Context, content string) error {
 }
 
 type TextMessage struct {
-	ThreadID   int    `json:"threadid"`
+	ID         int    `json:"_id"`
 	FromNumber string `json:"number"`
 	Body       string `json:"body"`
 }

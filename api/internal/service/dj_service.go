@@ -141,7 +141,7 @@ func (srv *DomainService) smsPoll(ctx context.Context) error {
 	}
 	for _, m := range msgs {
 		eg.Go(func() error {
-			return srv.saveTrack(ctx, m.ThreadID, m.Body, m.FromNumber)
+			return srv.saveTrack(ctx, m.ID, m.Body, m.FromNumber)
 		})
 	}
 	return eg.Wait()
