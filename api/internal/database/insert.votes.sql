@@ -1,8 +1,8 @@
-INSERT (
-	track_id,
+INSERT INTO track_voting.votes
+(
+	"url",
 	user_id
 )
-INTO track_voting.votes 
 VALUES (
 	$1,
 	$2

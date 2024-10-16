@@ -10,6 +10,6 @@ type Track struct {
 }
 
 type Vote struct {
-	TrackID int    `json:"trackId"`
-	UserID  string `json:"userId"`
+	Url    string `json:"url"`
+	UserID string `json:"userId"`
 }

@@ -1,9 +1,9 @@
 WITH votes as (
 	SELECT
-		track_id,
+		url,
 		count(*) as vote_count
 		FROM track_voting.votes
-		GROUP BY track_id
+		GROUP BY url
 )
 SELECT
 	t.id,
@@ -13,7 +13,7 @@ SELECT
 	t.created_by
 FROM
 	track_voting.tracks t
-LEFT JOIN votes v ON t.id = v.track_id
+LEFT JOIN votes v ON t.url = v.url
 WHERE
 	t.has_played = false
 order by v.vote_count desc, t.created_by desc

@@ -32,7 +32,7 @@ func (s *DomainService) CreateVote(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return s.datastore.CreateVote(ctx, v.TrackID, v.UserID)
+	return s.datastore.CreateVote(ctx, v.Url, v.UserID)
 }
 
 func (s *DomainService) DeleteVote(ctx context.Context) error {
@@ -40,7 +40,7 @@ func (s *DomainService) DeleteVote(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return s.datastore.DeleteVote(ctx, v.TrackID, v.UserID)
+	return s.datastore.DeleteVote(ctx, v.Url, v.UserID)
 }
 
 // get top voted track
@@ -96,32 +96,37 @@ func (srv *DomainService) RunSmsPoller(ctx context.Context) error {
 }
 
 func (srv *DomainService) playNext(ctx context.Context) (time.Duration, error) {
+	duration := time.Second * 1
 	info, err := termux.MediaInfo(ctx)
 	if err != nil {
-		return 0, err
+		return duration, err
 	}
 	if strings.Contains("Current Position:", info) {
 		sub := strings.TrimPrefix(info, "Current Position:")
 		times := strings.Split(sub, "/")
 		currPos, err := time.ParseDuration(strings.TrimSpace(times[0]))
 		if err != nil {
-			return 0, err
+			return duration, err
 		}
 		totalDur, err := time.ParseDuration(strings.TrimSpace(times[1]))
 		if err != nil {
-			return 0, err
+			return duration, err
 		}
 		return totalDur - currPos, nil
 	}
 	t, err := srv.datastore.ListTracks(ctx)
-	if err != nil {
-		return 0, err
+	if err != nil || len(t) == 0 {
+		return duration, err
 	}
-	slog.InfoContext(ctx, "starting next track", "filename", t[0].Filename)
+	slog.InfoContext(ctx, "starting next track", "filename", *t[0].Filename)
 	if err := termux.MediaPlay(ctx, *t[0].Filename); err != nil {
-		return 0, err
+		return duration, err
 	}
-	// TODO: update hasplayed in DB
+	u := t[0]
+	u.HasPlayed = true
+	if err := srv.datastore.UpdateTrack(ctx, &u); err != nil {
+		return duration, err
+	}
 	return srv.playNext(ctx)
 }
 
@@ -155,10 +160,7 @@ func (srv *DomainService) saveTrack(ctx context.Context, threadID int, body, fro
 			}
 			path := filepath.Join("/storage/emulated/0/Termux_Downloader/Youtube/", r.Filname)
 			slog.InfoContext(ctx, "saving track to DB", "filename", r.Filname, "from", fromNumber, "path", path)
-			err = termux.MediaPlay(ctx, path)
-			if err != nil {
-				return err
-			}
+
 			return srv.datastore.CreateTrack(
 				ctx,
 				&internal.Track{

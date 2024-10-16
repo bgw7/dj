@@ -14,14 +14,14 @@ import (
 func djRoombaVoteMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "trackId")
-		trackId, err := strconv.Atoi(id)
+		_, err := strconv.Atoi(id)
 		if err != nil {
 			handleError(w, fmt.Errorf("invalid trackID: %s", id))
 			return
 		}
 		ctx := context.WithValue(r.Context(), appcontext.DJRoombaVoteCTXKey, &internal.Vote{
-			TrackID: trackId,
-			UserID:  r.Host,
+			Url:    "", // TODO: fix this
+			UserID: r.Host,
 		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

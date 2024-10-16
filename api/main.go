@@ -31,7 +31,7 @@ var c serverConfig
 
 func initFlags() {
 	handler := log.New(os.Stderr)
-	logger := slog.New(handler).With("serviceName", "reservation-service")
+	logger := slog.New(handler).With("serviceName", "dj-roomba")
 	slog.SetDefault(logger)
 	flag.StringVar(&c.Port, "port", "9999", "port used in http server's address")
 	flag.StringVar(&c.Host, "host", "localhost", "host used in http server's address")
@@ -78,14 +78,32 @@ func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService, eg *errgro
 		return srv.RunSmsPoller(ctx)
 	})
 	eg.Go(func() error {
+		return srv.RunPlayNext(ctx)INSERT INTO tracks (
+			id,
+			url,
+			url,
+			filename,
+			has_played,
+			created_by,
+			created_at
+		  )
+		VALUES (
+			id:integer,
+			'url:character varying',
+			'url:character varying',
+			'filename:character varying',
+			has_played:boolean,
+			'created_by:character varying',
+			'created_at:timestamp without time zone'
+		  );
+	})
+	eg.Go(func() error {
 		<-ctx.Done()
-		slog.InfoContext(
+		slog.WarnContext(
 			ctx,
-			"context is done. shutting sms poller",
+			"shutting down sms poller",
 			"contextErr",
 			ctx.Err(),
-			"timeout",
-			shutdownTimeout,
 		)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
@@ -105,13 +123,11 @@ func listenAndServe(ctx context.Context, h *http.ServeMux, eg *errgroup.Group) {
 
 	eg.Go(func() error {
 		<-ctx.Done()
-		slog.InfoContext(
+		slog.WarnContext(
 			ctx,
-			"http server context is done. shutting down server",
+			"shutting down http server",
 			"contextErr",
 			ctx.Err(),
-			"timeout",
-			shutdownTimeout,
 		)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
