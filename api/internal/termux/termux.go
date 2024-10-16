@@ -21,11 +21,11 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("termux YoutubeDownload StdoutPipe failed: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("termux YoutubeDownload cmd.Start failed: %w", err)
 	}
 
 	scanner := bufio.NewScanner(stdout)
@@ -35,11 +35,11 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("termux YoutubeDownload scanner.Err failed: %w", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("termux YoutubeDownload cmd.Wait failed: %w", err)
 	}
 
 	validJSON := bytes.ReplaceAll([]byte(lastLine), []byte("'"), []byte("\""))
@@ -47,7 +47,7 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 	var obj OpenerResponse
 	err = json.Unmarshal(validJSON, &obj)
 
-	return &obj, err
+	return &obj, fmt.Errorf("termux YoutubeDownload json.Unmarshal failed: %w", err)
 }
 
 func MediaInfo(ctx context.Context) (string, error) {
@@ -92,21 +92,21 @@ func GetTextMessages(ctx context.Context) ([]TextMessage, error) {
 	cmd := exec.CommandContext(ctx, "termux-sms-list")
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("termux GetTextMessages cmd.StdoutPipe failed: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("termux sms list cmd.start failed: %w", err)
+		return nil, fmt.Errorf("termux GetTextMessages cmd.start failed: %w", err)
 	}
 
 	var msgs []TextMessage
 	if err := json.NewDecoder(out).Decode(&msgs); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("termux json.NewDecoder cmd.start failed: %w", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
 		return nil, fmt.Errorf("termux sms list cmd.wait failed: %w", err)
 	}
 
-	return msgs, err
+	return msgs, nil
 }
