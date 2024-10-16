@@ -30,7 +30,11 @@ func (db *Database) ListTracks(ctx context.Context) ([]internal.Track, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list tracks query failed: %w", err)
 	}
-	return pgx.CollectRows(rows, pgx.RowToStructByNameLax[internal.Track])
+	tracks, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[internal.Track])
+	if err != nil {
+		return nil, fmt.Errorf("ListTracks pgx.CollectRows failed: %w", err)
+	}
+	return tracks, nil
 }
 
 func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) error {
@@ -45,7 +49,7 @@ func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) erro
 		if data, ok := err.(*pgconn.PgError); ok && data.Code == "23505" {
 			return db.CreateVote(ctx, track.Url, track.CreatedBy)
 		}
-		return err
+		return fmt.Errorf("CreateTrack failed: %w", err)
 
 	}
 	return err
