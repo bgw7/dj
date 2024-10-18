@@ -32,7 +32,7 @@ func (s *DomainService) CreateVote(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return s.datastore.CreateVote(ctx, v.Url, v.UserID)
+	return s.datastore.CreateVote(ctx, v.TrackID, v.UserID)
 }
 
 func (s *DomainService) DeleteVote(ctx context.Context) error {
@@ -40,7 +40,7 @@ func (s *DomainService) DeleteVote(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return s.datastore.DeleteVote(ctx, v.Url, v.UserID)
+	return s.datastore.DeleteVote(ctx, v.TrackID, v.UserID)
 }
 
 // get top voted track

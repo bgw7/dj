@@ -1,6 +1,6 @@
 INSERT INTO track_voting.votes
 (
-	"url",
+	track_id,
 	user_id
 )
 VALUES (

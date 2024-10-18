@@ -10,12 +10,12 @@ import (
 	"os/exec"
 )
 
-type OpenerResponse struct {
-	Filname string `json:"Filename"`
-	Url     string `json:"URL"`
+type YTDownloadResponse struct {
+	Filname string `json:"filename"`
+	Url     string `json:"webpage_url"`
 }
 
-func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerResponse, error) {
+func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {
 	slog.InfoContext(ctx, "starting termux-url-opener", "youtubeShareLink", youtubeShareLink)
 	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink)
 	// Create a buffer to capture stderr
@@ -32,6 +32,8 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 	}
 
 	scanner := bufio.NewScanner(stdout)
+	buf := make([]byte, 0, 64*1024) // 64KB buffer
+	scanner.Buffer(buf, 1024*1024)  // Increase buffer size to 1MB
 	var lastLine string
 	for scanner.Scan() {
 		lastLine = scanner.Text()
@@ -47,12 +49,13 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*OpenerRespo
 		return nil, fmt.Errorf("termux YoutubeDownload cmd.Wait failed: %w", err)
 	}
 
-	validJSON := bytes.ReplaceAll([]byte(lastLine), []byte("'"), []byte("\""))
+	var obj YTDownloadResponse
+	err = json.Unmarshal([]byte(lastLine), &obj)
+	if err != nil {
+		return nil, fmt.Errorf("termux YoutubeDownload json.Unmarshal failed with youtubeShareLink %s: %w", youtubeShareLink, err)
+	}
 
-	var obj OpenerResponse
-	err = json.Unmarshal(validJSON, &obj)
-
-	return &obj, fmt.Errorf("termux YoutubeDownload json.Unmarshal failed: %w", err)
+	return &obj, nil
 }
 
 func MediaInfo(ctx context.Context) (string, error) {

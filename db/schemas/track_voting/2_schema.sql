@@ -16,12 +16,12 @@ CREATE TABLE IF NOT EXISTS tracks (
 );
 
 CREATE TABLE IF NOT EXISTS votes (
-  url VARCHAR(500) NOT NULL,
+  track_id integer NOT NULL,
   user_id VARCHAR(100) NOT NULL,
-  CONSTRAINT fk_url
-    FOREIGN KEY(url)
-      REFERENCES tracks (url),
-  UNIQUE(url, user_id)
+  CONSTRAINT fk_id
+    FOREIGN KEY(track_id)
+      REFERENCES tracks (id),
+  UNIQUE(track_id, user_id)
 );
 
 GRANT ALL ON TABLE tracks TO api_user WITH GRANT OPTION;

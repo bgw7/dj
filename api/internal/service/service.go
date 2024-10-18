@@ -11,8 +11,8 @@ type DataStorage interface {
 	ListTracks(ctx context.Context) ([]internal.Track, error)
 	CreateTrack(ctx context.Context, t *internal.Track) error
 	UpdateTrack(ctx context.Context, t *internal.Track) error
-	CreateVote(ctx context.Context, url string, userId string) error
-	DeleteVote(ctx context.Context, url string, userId string) error
+	CreateVote(ctx context.Context, trackID int, userId string) error
+	DeleteVote(ctx context.Context, trackID int, userId string) error
 }
 type DomainService struct {
 	datastore DataStorage

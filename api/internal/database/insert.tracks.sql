@@ -7,4 +7,5 @@ INSERT INTO track_voting.tracks
 	$1,
 	$2,
 	$3
-);
+)
+RETURNING id;

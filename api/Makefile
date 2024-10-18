@@ -33,3 +33,18 @@ db-start: ## Start the relational datastore
 
 post: ## create reservation via curl
 	curl -v localhost:9999/api/reservations -d "@./testing/testdata/input/createReservation.json"
+
+yt-dl:
+	yt-dlp \
+		--no-playlist \
+		--output '~/Downloads/youtube/other/%(title)s.%(ext)s' \
+		--restrict-filenames \
+		--trim-filenames 250 \
+		--no-cache-dir \
+		--dump-json \
+		--no-simulate \
+		--audio-quality 0 \
+		--no-keep-video \
+		--audio-format mp3 \
+		--extract-audio \
+		https://youtu.be/MjlTKXujfwE?feature=shared | jq

@@ -44,13 +44,14 @@ func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) erro
 		track.Url,
 		track.Filename,
 		track.CreatedBy,
-	).Scan()
+	).Scan(
+		&track.ID,
+	)
 	if err != nil {
 		if data, ok := err.(*pgconn.PgError); ok && data.Code == "23505" {
-			return db.CreateVote(ctx, track.Url, track.CreatedBy)
+			return db.CreateVote(ctx, track.ID, track.CreatedBy)
 		}
 		return fmt.Errorf("CreateTrack failed: %w", err)
-
 	}
 	return err
 }
@@ -65,17 +66,17 @@ func (db *Database) UpdateTrack(ctx context.Context, track *internal.Track) erro
 	return err
 }
 
-func (db *Database) DeleteVote(ctx context.Context, url, userId string) error {
+func (db *Database) DeleteVote(ctx context.Context, trackID int, userId string) error {
 	_, err := db.conn.Exec(
 		ctx,
 		votesDelete,
-		url,
+		trackID,
 		userId,
 	)
 	return err
 }
 
-func (db *Database) CreateVote(ctx context.Context, url, userId string) error {
-	_, err := db.conn.Exec(ctx, votesInsert, url, userId)
+func (db *Database) CreateVote(ctx context.Context, trackID int, userId string) error {
+	_, err := db.conn.Exec(ctx, votesInsert, trackID, userId)
 	return err
 }
