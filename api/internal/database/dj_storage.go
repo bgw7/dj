@@ -46,9 +46,11 @@ func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) erro
 		track.CreatedBy,
 	).Scan(
 		&track.ID,
+		&track.HasPlayed,
 	)
+
 	if err != nil {
-		if data, ok := err.(*pgconn.PgError); ok && data.Code == "23505" {
+		if data, ok := err.(*pgconn.PgError); ok && data.Code == "23505" && !track.HasPlayed {
 			return db.CreateVote(ctx, track.ID, track.CreatedBy)
 		}
 		return fmt.Errorf("CreateTrack failed: %w", err)

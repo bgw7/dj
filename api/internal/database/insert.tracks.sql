@@ -8,4 +8,4 @@ INSERT INTO track_voting.tracks
 	$2,
 	$3
 )
-RETURNING id;
+RETURNING id, has_played;
