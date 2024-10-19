@@ -1,5 +1,6 @@
 DELETE FROM track_voting.votes
 WHERE
-	url = $1 AND
-	user_id = $2
+	filename = $1 AND
+	url = $2 AND
+	voter_id = $3
 ;

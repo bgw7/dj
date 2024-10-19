@@ -37,25 +37,26 @@ func (db *Database) ListTracks(ctx context.Context) ([]internal.Track, error) {
 	return tracks, nil
 }
 
-func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) error {
+func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) (*internal.Track, error) {
 	err := db.conn.QueryRow(
 		ctx,
 		tracksInsert,
 		track.Url,
 		track.Filename,
 		track.CreatedBy,
+		track.CreatedWith,
 	).Scan(
 		&track.ID,
 		&track.HasPlayed,
 	)
 
 	if err != nil {
-		if data, ok := err.(*pgconn.PgError); ok && data.Code == "23505" && !track.HasPlayed {
-			return db.CreateVote(ctx, track.ID, track.CreatedBy)
+		if data, ok := err.(*pgconn.PgError); ok && data.Code == "23505" {
+			return track, fmt.Errorf("%w: %v", internal.ErrUniqueConstraintViolation, err)
 		}
-		return fmt.Errorf("CreateTrack failed: %w", err)
+		return nil, fmt.Errorf("CreateTrack failed: %w", err)
 	}
-	return err
+	return track, nil
 }
 
 func (db *Database) UpdateTrack(ctx context.Context, track *internal.Track) error {
@@ -68,17 +69,24 @@ func (db *Database) UpdateTrack(ctx context.Context, track *internal.Track) erro
 	return err
 }
 
-func (db *Database) DeleteVote(ctx context.Context, trackID int, userId string) error {
+func (db *Database) DeleteVote(ctx context.Context, v *internal.Vote) error {
 	_, err := db.conn.Exec(
 		ctx,
 		votesDelete,
-		trackID,
-		userId,
+		v.Filename,
+		v.Url,
+		v.VoterID,
 	)
 	return err
 }
 
-func (db *Database) CreateVote(ctx context.Context, trackID int, userId string) error {
-	_, err := db.conn.Exec(ctx, votesInsert, trackID, userId)
+func (db *Database) CreateVote(ctx context.Context, v *internal.Vote) error {
+	_, err := db.conn.Exec(
+		ctx,
+		votesInsert,
+		v.Filename,
+		v.Url,
+		v.VoterID,
+	)
 	return err
 }

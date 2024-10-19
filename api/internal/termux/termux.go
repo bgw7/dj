@@ -10,9 +10,14 @@ import (
 	"os/exec"
 )
 
+type Version struct {
+	Version    string `json:"version"`
+	Repository string `json:"repository"`
+}
 type YTDownloadResponse struct {
-	Filname string `json:"filename"`
-	Url     string `json:"webpage_url"`
+	Filname string   `json:"filename"`
+	Url     string   `json:"webpage_url"`
+	Version *Version `json:"_version"`
 }
 
 func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {

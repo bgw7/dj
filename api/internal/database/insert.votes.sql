@@ -1,11 +1,13 @@
 INSERT INTO track_voting.votes
 (
-	track_id,
-	user_id
+	filename,
+	url,
+	voter_id
 )
 VALUES (
 	$1,
-	$2
+	$2,
+	$3
 	)
 ON CONFLICT DO NOTHING
 ;

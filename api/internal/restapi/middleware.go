@@ -14,14 +14,15 @@ import (
 func djRoombaVoteMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "trackId")
-		trackID, err := strconv.Atoi(id)
+		_, err := strconv.Atoi(id)
 		if err != nil {
 			handleError(w, fmt.Errorf("invalid trackID: %s", id))
 			return
 		}
 		ctx := context.WithValue(r.Context(), appcontext.DJRoombaVoteCTXKey, &internal.Vote{
-			TrackID: trackID,
-			UserID:  r.Host,
+			//TODO: get voter props from datastore
+			// TrackID: trackID,
+			VoterID: r.Host,
 		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -30,7 +31,7 @@ func metdataMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// create new context from `r` request context, and assign key `"metadataCTXKey"`
 		// to value of `"internal.Metadata"`
-		client := r.Host // TODO: user from a validated oauth token
+		client := r.Host // TODO: user from a validated authorization token
 		ctx := context.WithValue(r.Context(), appcontext.MetadataCTXKey, &internal.Metadata{
 			CreatedBy: client,
 			UpdateBy:  &client,

@@ -15,7 +15,7 @@ import (
 
 type DJRoombaService interface {
 	ListTracks(ctx context.Context) ([]internal.Track, error)
-	CreatTrack(ctx context.Context, t *internal.Track) (*internal.Track, error)
+	CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error)
 	CreateVote(ctx context.Context) error
 	DeleteVote(ctx context.Context) error
 }
@@ -49,7 +49,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.Route("/tracks", func(r chi.Router) {
 		r.Use(metdataMiddleware)
 		r.Get("/", handleOut(h.service.ListTracks, http.StatusOK))
-		r.Post("/", handleInOut(h.service.CreatTrack, http.StatusCreated))
+		r.Post("/", handleInOut(h.service.CreateTrack, http.StatusCreated))
 		r.Route("/dl", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				url := r.Header.Get("url")

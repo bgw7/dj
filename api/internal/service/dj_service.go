@@ -18,13 +18,21 @@ func (s *DomainService) ListTracks(ctx context.Context) ([]internal.Track, error
 	return s.datastore.ListTracks(ctx)
 }
 
-func (s *DomainService) CreatTrack(ctx context.Context, t *internal.Track) (*internal.Track, error) {
+func (s *DomainService) CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error) {
 	m, err := appcontext.FromContext[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
 	if err != nil {
 		return nil, err
 	}
 	t.CreatedBy = m.CreatedBy
-	return nil, s.datastore.CreateTrack(ctx, t)
+	t.CreatedWith = m.CreatedWith
+	if t, err := s.datastore.CreateTrack(ctx, t); err != nil {
+		if errors.Is(err, internal.ErrUniqueConstraintViolation) {
+			return t, s.datastore.CreateVote(ctx, &internal.Vote{Filename: *t.Filename, Url: t.Url, VoterID: t.CreatedBy})
+		}
+		return nil, err
+
+	}
+	return t, nil
 }
 
 func (s *DomainService) CreateVote(ctx context.Context) error {
@@ -32,7 +40,7 @@ func (s *DomainService) CreateVote(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return s.datastore.CreateVote(ctx, v.TrackID, v.UserID)
+	return s.datastore.CreateVote(ctx, v)
 }
 
 func (s *DomainService) DeleteVote(ctx context.Context) error {
@@ -40,21 +48,21 @@ func (s *DomainService) DeleteVote(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	return s.datastore.DeleteVote(ctx, v.TrackID, v.UserID)
+	return s.datastore.DeleteVote(ctx, v)
 }
 
 // get top voted track
 // start media player
 // db update hasPlayed
 // ticker.Reset based on media player info maxTime - currPosition
-func (srv *DomainService) RunPlayNext(ctx context.Context) error {
+func (s *DomainService) RunPlayNext(ctx context.Context) error {
 	slog.InfoContext(ctx, "RunPlayNext started")
 	delay := time.Second * 1
 	ticker := time.NewTicker(delay)
 	for {
 		select {
 		case <-ticker.C:
-			delay, err := srv.playNext(ctx)
+			delay, err := s.playNext(ctx)
 			if err != nil {
 				slog.ErrorContext(ctx, "media player error", "error", err)
 				return termux.Notify(ctx, err.Error())
@@ -77,16 +85,16 @@ func (srv *DomainService) RunPlayNext(ctx context.Context) error {
 //
 // err to termux notify
 // filename insert to DB tracks
-func (srv *DomainService) RunSmsPoller(ctx context.Context) error {
+func (s *DomainService) RunSmsPoller(ctx context.Context) error {
 	slog.InfoContext(ctx, "RunSmsPoller started")
 	delay := time.Second * 3
 	ticker := time.NewTicker(delay)
 	for {
 		select {
 		case <-ticker.C:
-			err := srv.smsPoll(ctx)
+			err := s.smsPoll(ctx)
 			if err != nil {
-				slog.ErrorContext(ctx, "sms poller error", "error", err)
+				slog.ErrorContext(ctx, "s.smsPoll() error", "error", err)
 				return termux.Notify(ctx, err.Error())
 			}
 		case <-ctx.Done():
@@ -95,7 +103,7 @@ func (srv *DomainService) RunSmsPoller(ctx context.Context) error {
 	}
 }
 
-func (srv *DomainService) playNext(ctx context.Context) (time.Duration, error) {
+func (s *DomainService) playNext(ctx context.Context) (time.Duration, error) {
 	duration := time.Second * 1
 	info, err := termux.MediaInfo(ctx)
 	if err != nil {
@@ -114,7 +122,7 @@ func (srv *DomainService) playNext(ctx context.Context) (time.Duration, error) {
 		}
 		return totalDur - currPos, nil
 	}
-	t, err := srv.datastore.ListTracks(ctx)
+	t, err := s.ListTracks(ctx)
 	if err != nil || len(t) == 0 {
 		return duration, err
 	}
@@ -124,10 +132,10 @@ func (srv *DomainService) playNext(ctx context.Context) (time.Duration, error) {
 	}
 	u := t[0]
 	u.HasPlayed = true
-	if err := srv.datastore.UpdateTrack(ctx, &u); err != nil {
+	if err := s.datastore.UpdateTrack(ctx, &u); err != nil {
 		return duration, err
 	}
-	return srv.playNext(ctx)
+	return s.playNext(ctx)
 }
 
 func (srv *DomainService) smsPoll(ctx context.Context) error {
@@ -147,10 +155,10 @@ func (srv *DomainService) smsPoll(ctx context.Context) error {
 	return eg.Wait()
 }
 
-func (srv *DomainService) saveTrack(ctx context.Context, threadID int, body, fromNumber string) error {
-	_, ok := srv.readMsgs.Load(threadID)
+func (s *DomainService) saveTrack(ctx context.Context, threadID int, body, fromNumber string) error {
+	_, ok := s.readMsgs.Load(threadID)
 	if !ok {
-		srv.readMsgs.Store(threadID, "")
+		s.readMsgs.Store(threadID, "")
 		if strings.Contains(body, "https://") {
 			slog.InfoContext(ctx, "msg contains https://", "body", body)
 			url := strings.TrimSpace(body)
@@ -160,14 +168,18 @@ func (srv *DomainService) saveTrack(ctx context.Context, threadID int, body, fro
 			}
 			path := filepath.Join("/storage/emulated/0/Termux_Downloader/Youtube/", r.Filname)
 			slog.InfoContext(ctx, "saving track to DB", "filename", r.Filname, "from", fromNumber, "path", path)
+			ctx := context.WithValue(ctx, appcontext.MetadataCTXKey, &internal.Metadata{
+				CreatedBy:   fromNumber,
+				CreatedWith: strings.Join([]string{r.Version.Repository, r.Version.Version}, "-"),
+			})
 
-			return srv.datastore.CreateTrack(
+			_, err = s.CreateTrack(
 				ctx,
 				&internal.Track{
-					Url:       url,
-					Filename:  &path,
-					CreatedBy: fromNumber,
+					Url:      url,
+					Filename: &path,
 				})
+			return err
 		}
 	}
 	return nil
