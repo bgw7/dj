@@ -4,6 +4,7 @@
 !Makefile
 !README.md
 !.env
+!termux-url-opener
 
 !/db
 !/db/**
