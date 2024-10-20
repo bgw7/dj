@@ -51,10 +51,6 @@ func (s *DomainService) DeleteVote(ctx context.Context) error {
 	return s.datastore.DeleteVote(ctx, v)
 }
 
-// get top voted track
-// start media player
-// db update hasPlayed
-// ticker.Reset based on media player info maxTime - currPosition
 func (s *DomainService) RunPlayNext(ctx context.Context) error {
 	slog.InfoContext(ctx, "RunPlayNext started")
 	delay := time.Second * 1
@@ -75,16 +71,6 @@ func (s *DomainService) RunPlayNext(ctx context.Context) error {
 	}
 }
 
-// get SMS
-// for each
-// ID not in map
-// body is https://
-// download
-//   - return err
-//   - return filename
-//
-// err to termux notify
-// filename insert to DB tracks
 func (s *DomainService) RunSmsPoller(ctx context.Context) error {
 	slog.InfoContext(ctx, "RunSmsPoller started")
 	delay := time.Second * 3
@@ -159,25 +145,26 @@ func (s *DomainService) saveTrack(ctx context.Context, threadID int, body, fromN
 	_, ok := s.readMsgs.Load(threadID)
 	if !ok {
 		s.readMsgs.Store(threadID, "")
-		if strings.Contains(body, "https://yo") {
+		if strings.Contains(body, "https://y") {
 			slog.InfoContext(ctx, "msg contains https://", "body", body)
 			url := strings.TrimSpace(body)
 			r, err := termux.YoutubeDownload(ctx, url)
 			if err != nil {
 				return err
 			}
-			path := filepath.Join("/storage/emulated/0/Termux_Downloader/Youtube/", r.Filname)
-			slog.InfoContext(ctx, "saving track to DB", "filename", r.Filname, "from", fromNumber, "path", path)
+
+			ext := filepath.Ext(r.Filname)
+			r.Filname = r.Filname[:len(r.Filname)-len(ext)] + ".mp3"
+			slog.InfoContext(ctx, "saving track to DB", "filename", r.Filname, "from", fromNumber)
 			ctx := context.WithValue(ctx, appcontext.MetadataCTXKey, &internal.Metadata{
 				CreatedBy:   fromNumber,
 				CreatedWith: strings.Join([]string{r.Version.Repository, r.Version.Version}, "-"),
 			})
-
 			_, err = s.CreateTrack(
 				ctx,
 				&internal.Track{
 					Url:      url,
-					Filename: &path,
+					Filename: &r.Filname,
 				})
 			return err
 		}
