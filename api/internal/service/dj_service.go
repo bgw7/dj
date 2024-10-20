@@ -90,6 +90,7 @@ func (s *DomainService) RunSmsPoller(ctx context.Context) error {
 }
 
 func (s *DomainService) playNext(ctx context.Context) (time.Duration, error) {
+	slog.InfoContext(ctx, "starting playNext")
 	duration := time.Second * 1
 	info, err := termux.MediaInfo(ctx)
 	if err != nil {
@@ -112,6 +113,7 @@ func (s *DomainService) playNext(ctx context.Context) (time.Duration, error) {
 	if err != nil || len(t) == 0 {
 		return duration, err
 	}
+	slog.InfoContext(ctx, "starting termux.MediaPlay")
 	slog.InfoContext(ctx, "starting next track", "filename", *t[0].Filename)
 	if err := termux.MediaPlay(ctx, *t[0].Filename); err != nil {
 		return duration, err
