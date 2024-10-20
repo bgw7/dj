@@ -159,7 +159,7 @@ func (s *DomainService) saveTrack(ctx context.Context, threadID int, body, fromN
 	_, ok := s.readMsgs.Load(threadID)
 	if !ok {
 		s.readMsgs.Store(threadID, "")
-		if strings.Contains(body, "https://") {
+		if strings.Contains(body, "https://yo") {
 			slog.InfoContext(ctx, "msg contains https://", "body", body)
 			url := strings.TrimSpace(body)
 			r, err := termux.YoutubeDownload(ctx, url)
