@@ -4,14 +4,13 @@ url=$1
 
 yt-dlp \
 --no-playlist \
---output '/storage/emulated/0/Termux_Downloader/Youtube/%(title)s.%(ext)s' \
+--output '~/downloads/audio/%(title)s.%(ext)s' \
 --restrict-filenames \
 --trim-filenames 250 \
 --no-cache-dir \
 --dump-json \
 --no-simulate \
 --audio-quality 0 \
---no-keep-video \
 --audio-format mp3 \
 --extract-audio \
 $url
