@@ -14,6 +14,7 @@ type Version struct {
 	Version    string `json:"version"`
 	Repository string `json:"repository"`
 }
+
 type YTDownloadResponse struct {
 	Filname string   `json:"filename"`
 	Url     string   `json:"webpage_url"`
@@ -21,11 +22,7 @@ type YTDownloadResponse struct {
 }
 
 func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {
-	slog.InfoContext(ctx, "starting termux-url-opener", "youtubeShareLink", youtubeShareLink)
 	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink)
-	// Create a buffer to capture stderr
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -36,10 +33,10 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*YTDownloadR
 		return nil, fmt.Errorf("termux YoutubeDownload cmd.Start failed: %w", err)
 	}
 
+	var lastLine string
 	scanner := bufio.NewScanner(stdout)
 	buf := make([]byte, 0, 64*1024) // 64KB buffer
-	scanner.Buffer(buf, 1024*1024)  // Increase buffer size to 1MB
-	var lastLine string
+	scanner.Buffer(buf, 1024*1024)  // Max buffer size is 1MB
 	for scanner.Scan() {
 		lastLine = scanner.Text()
 	}
@@ -49,7 +46,8 @@ func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*YTDownloadR
 	}
 
 	if err := cmd.Wait(); err != nil {
-		// Print the stderr output
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
 		slog.WarnContext(ctx, "termux YoutubeDownload cmd.Wait Stderr output:", "stderr", stderr.String())
 	}
 
@@ -117,7 +115,9 @@ func GetTextMessages(ctx context.Context) ([]TextMessage, error) {
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return nil, fmt.Errorf("termux sms list cmd.wait failed: %w", err)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		return nil, fmt.Errorf("termux sms list cmd.wait failed. cmd.Stderr: %s\n: %w", stderr.String(), err)
 	}
 
 	return msgs, nil

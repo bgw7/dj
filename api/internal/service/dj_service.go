@@ -61,7 +61,9 @@ func (s *DomainService) RunPlayNext(ctx context.Context) error {
 			delay, err := s.playNext(ctx)
 			if err != nil {
 				slog.ErrorContext(ctx, "media player error", "error", err)
-				return termux.Notify(ctx, err.Error())
+				if err := termux.Notify(ctx, err.Error()); err != nil {
+					slog.ErrorContext(ctx, "termuxNotify() failed", "error", err)
+				}
 			}
 			slog.InfoContext(ctx, "delay before next track play set", "delay", delay.String())
 			ticker.Reset(delay)
@@ -81,7 +83,9 @@ func (s *DomainService) RunSmsPoller(ctx context.Context) error {
 			err := s.smsPoll(ctx)
 			if err != nil {
 				slog.ErrorContext(ctx, "s.smsPoll() error", "error", err)
-				return termux.Notify(ctx, err.Error())
+				if err := termux.Notify(ctx, err.Error()); err != nil {
+					slog.ErrorContext(ctx, "termuxNotify() failed", "error", err)
+				}
 			}
 		case <-ctx.Done():
 			return ctx.Err()
