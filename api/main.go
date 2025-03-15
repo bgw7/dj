@@ -13,10 +13,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/bgw7/dj/internal/database"
+	"github.com/bgw7/dj/internal/datastore"
+	"github.com/bgw7/dj/internal/mediaplayer"
 	"github.com/bgw7/dj/internal/restapi"
 	"github.com/bgw7/dj/internal/service"
-	"github.com/bgw7/dj/internal/termux"
 	"github.com/charmbracelet/log"
 )
 
@@ -57,8 +57,8 @@ func main() {
 
 	defer conn.Close()
 
-	db := database.NewDB(conn)
-	srv := service.NewDomainService(db)
+	store := datastore.NewDatastore(conn)
+	srv := service.NewDomainService(store)
 	h := restapi.NewHandler(srv)
 
 	mux := http.NewServeMux()
@@ -90,7 +90,7 @@ func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService, eg *errgro
 		)
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
-		return termux.MediaStop(shutdownCtx)
+		return mediaplayer.MediaStop(shutdownCtx)
 	})
 }
 

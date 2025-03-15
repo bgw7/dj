@@ -4,18 +4,18 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/bgw7/dj/internal"
 	"github.com/bgw7/dj/internal/appcontext"
 	"github.com/bgw7/dj/internal/termux"
+	"github.com/bgw7/dj/internal/youtube"
 	"golang.org/x/sync/errgroup"
 )
 
-func (s *DomainService) ListTracks(ctx context.Context) ([]internal.Track, error) {
-	return s.datastore.ListTracks(ctx)
+func (s *DomainService) GetTracks(ctx context.Context) ([]internal.Track, error) {
+	return s.datastore.GetTracks(ctx)
 }
 
 func (s *DomainService) CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error) {
@@ -24,7 +24,7 @@ func (s *DomainService) CreateTrack(ctx context.Context, t *internal.Track) (*in
 		return nil, err
 	}
 	t.CreatedBy = m.CreatedBy
-	t.CreatedWith = m.CreatedWith
+
 	if t, err := s.datastore.CreateTrack(ctx, t); err != nil {
 		if errors.Is(err, internal.ErrUniqueConstraintViolation) {
 			return t, s.datastore.CreateVote(ctx, &internal.Vote{Filename: *t.Filename, Url: t.Url, VoterID: t.CreatedBy})
@@ -61,7 +61,7 @@ func (s *DomainService) RunPlayNext(ctx context.Context) error {
 			delay, err := s.playNext(ctx)
 			if err != nil {
 				slog.ErrorContext(ctx, "media player error", "error", err)
-				if err := termux.Notify(ctx, err.Error()); err != nil {
+				if err := audio.Notify(ctx, err.Error()); err != nil {
 					slog.ErrorContext(ctx, "termuxNotify() failed", "error", err)
 				}
 			}
@@ -112,8 +112,9 @@ func (s *DomainService) playNext(ctx context.Context) (time.Duration, error) {
 		}
 		return totalDur - currPos, nil
 	}
-	t, err := s.ListTracks(ctx)
+	t, err := s.GetTracks(ctx)
 	if err != nil || len(t) == 0 {
+		//TODO: no tracks to play, block until SMSpoller gets a track
 		return duration, err
 	}
 
@@ -153,24 +154,27 @@ func (s *DomainService) saveTrack(ctx context.Context, threadID int, body, fromN
 		if strings.Contains(body, "https://y") {
 			slog.InfoContext(ctx, "msg contains https://", "body", body)
 			url := strings.TrimSpace(body)
-			r, err := termux.YoutubeDownload(ctx, url)
+			ctx := context.WithValue(
+				ctx,
+				appcontext.MetadataCTXKey,
+				&internal.Metadata{
+					CreatedBy: fromNumber,
+				},
+			)
+			t := &internal.Track{
+				Url: url,
+			}
+			r, err := youtube.YoutubeDownload(ctx, t.Url)
 			if err != nil {
 				return err
 			}
+			t.CreatedWith = strings.Join([]string{"termux", r.Version.Repository, r.Version.Version}, "-")
+			t.Filename = &r.Filename
 
-			ext := filepath.Ext(r.Filname)
-			r.Filname = r.Filname[:len(r.Filname)-len(ext)] + ".mp3"
-			slog.InfoContext(ctx, "saving track to DB", "filename", r.Filname, "from", fromNumber)
-			ctx := context.WithValue(ctx, appcontext.MetadataCTXKey, &internal.Metadata{
-				CreatedBy:   fromNumber,
-				CreatedWith: strings.Join([]string{r.Version.Repository, r.Version.Version}, "-"),
-			})
 			_, err = s.CreateTrack(
 				ctx,
-				&internal.Track{
-					Url:      url,
-					Filename: &r.Filname,
-				})
+				t,
+			)
 			return err
 		}
 	}

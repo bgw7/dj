@@ -1,6 +1,7 @@
 package restapi
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -26,6 +27,8 @@ func handleError(w http.ResponseWriter, err error) {
 		code = http.StatusBadRequest
 	case errors.As(err, &parseError):
 		code = http.StatusBadRequest
+	case errors.Is(err, context.Canceled):
+		code = http.StatusAccepted
 	case errors.Is(err, internal.ErrRecordNotFound):
 		code = http.StatusNotFound
 	default:

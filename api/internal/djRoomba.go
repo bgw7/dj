@@ -7,6 +7,7 @@ type Track struct {
 	VoteCount   int     `json:"voteCount"`
 	HasPlayed   bool    `json:"hasPlayed"`
 	CreatedBy   string  `json:"createdBy"`
+	CreatedAt   string  `json:"createdAt"`
 	CreatedWith string  `json:"createdWith"`
 }
 

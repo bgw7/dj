@@ -1,4 +1,4 @@
-package database
+package datastore
 
 import (
 	"context"
@@ -220,7 +220,7 @@ func (m *mockConn) QueryRow(ctx context.Context, query string, args ...any) pgx.
 // 		t.Run(tt.name, func(t *testing.T) {
 // 			// t.Parallel()
 
-// 			db := NewDB(tt.fields.conn)
+// 			db := NewDatastore(tt.fields.conn)
 // 			got, err := db.FindReservation(context.Background(), tt.args.id)
 // 			if (err != nil) != tt.wantErr {
 // 				t.Errorf("DB.FindOne() error = %v, wantErr %v", err, tt.wantErr)
