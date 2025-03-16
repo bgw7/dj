@@ -25,5 +25,6 @@ func NewDomainService(ctx context.Context, datastore DataStorage) *DomainService
 		readMsgs:  sync.Map{},
 	}
 	go ds.listenOnTextMsgs(ctx)
+	go ds.playNextLoop(ctx)
 	return ds
 }

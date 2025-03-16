@@ -1,5 +1,3 @@
-//go:build android
-
 package service
 
 import (
@@ -13,8 +11,8 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-func (s *DomainService) listenOnTextMsgs(ctx context.Context) {
-	slog.InfoContext(ctx, "starting listenOnTextMsgs SMS message poller", "os", runtime.GOOS)
+func (s *DomainService) playNextLoop(ctx context.Context) {
+	slog.InfoContext(ctx, "starting playNextLoop", "os", runtime.GOOS)
 	playNext := make(chan *internal.Track)
 	ctxWithTimeout, cancelTimeout := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancelTimeout()
@@ -52,7 +50,7 @@ func (s *DomainService) listenOnTextMsgs(ctx context.Context) {
 			}
 
 		case <-ctx.Done():
-			slog.Info("Shutting down")
+			slog.Info("Shutting down playNextLoop")
 			close(playNext)
 			return
 		}
