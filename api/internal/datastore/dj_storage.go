@@ -25,16 +25,19 @@ var votesDelete string
 //go:embed insert.votes.sql
 var votesInsert string
 
-func (db *Datastore) GetTracks(ctx context.Context) ([]internal.Track, error) {
+func (db *Datastore) GetNextTrack(ctx context.Context) (*internal.Track, error) {
 	rows, err := db.conn.Query(ctx, tracksSelect)
 	if err != nil {
 		return nil, fmt.Errorf("get tracks query failed: %w", err)
 	}
-	tracks, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[internal.Track])
+	track, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[internal.Track])
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("GetTracks pgx.CollectRows failed: %w", err)
 	}
-	return tracks, nil
+	return &track, nil
 }
 
 func (db *Datastore) CreateTrack(ctx context.Context, track *internal.Track) (*internal.Track, error) {

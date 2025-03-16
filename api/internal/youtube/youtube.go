@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os/exec"
+	"strings"
 )
 
 type Version struct {
@@ -21,38 +22,11 @@ type YTDownloadResponse struct {
 	Version  *Version `json:"_version"`
 }
 
-type TextMessage struct {
-	ID         int    `json:"_id"`
-	FromNumber string `json:"number"`
-	Body       string `json:"body"`
+func (y *YTDownloadResponse) CreatedWith() string {
+	return strings.Join([]string{"", y.Version.Repository, y.Version.Version}, "-")
 }
 
-func GetTextMessages(ctx context.Context) ([]TextMessage, error) {
-	cmd := exec.CommandContext(ctx, "termux-sms-list")
-	out, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, fmt.Errorf("termux GetTextMessages cmd.StdoutPipe failed: %w", err)
-	}
-
-	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("termux GetTextMessages cmd.start failed: %w", err)
-	}
-
-	var msgs []TextMessage
-	if err := json.NewDecoder(out).Decode(&msgs); err != nil {
-		return nil, fmt.Errorf("termux json.NewDecoder cmd.start failed: %w", err)
-	}
-
-	if err := cmd.Wait(); err != nil {
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-		return nil, fmt.Errorf("termux sms list cmd.wait failed. cmd.Stderr: %s\n: %w", stderr.String(), err)
-	}
-
-	return msgs, nil
-}
-
-func YoutubeDownload(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {
+func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {
 	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink)
 
 	stdout, err := cmd.StdoutPipe()

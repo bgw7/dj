@@ -53,7 +53,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r.Route("/download", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				url := r.Header.Get("url")
-				v, err := youtube.YoutubeDownload(r.Context(), url)
+				v, err := youtube.Download(r.Context(), url)
 				if err != nil {
 					handleError(w, err)
 					return
