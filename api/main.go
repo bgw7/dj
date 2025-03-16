@@ -8,112 +8,90 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-	"golang.org/x/sync/errgroup"
-
-	"github.com/bgw7/dj/internal/database"
+	"github.com/bgw7/dj/internal/datastore"
 	"github.com/bgw7/dj/internal/restapi"
 	"github.com/bgw7/dj/internal/service"
-	"github.com/bgw7/dj/internal/termux"
 	"github.com/charmbracelet/log"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/sync/errgroup"
 )
 
-const shutdownTimeout = 3 * time.Second
+const shutdownTimeout = 5 * time.Second
 
-type serverConfig struct {
-	Host string
-	Port string
-}
+func main() {
+	// Initialize flags and logger
+	var host, port string
+	flag.StringVar(&port, "port", "9999", "server port")
+	flag.StringVar(&host, "host", "localhost", "server host")
+	flag.Parse()
 
-var c serverConfig
-
-func initFlags() {
 	handler := log.New(os.Stderr)
 	logger := slog.New(handler).With("serviceName", "dj-roomba")
 	slog.SetDefault(logger)
-	flag.StringVar(&c.Port, "port", "9999", "port used in http server's address")
-	flag.StringVar(&c.Host, "host", "localhost", "host used in http server's address")
-	flag.Parse()
-}
 
-func main() {
-	ctx := context.Background()
-	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill)
+	// Set up context with cancellation
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
-	initFlags()
 
-	conn, err := pgxpool.New(ctx, "") //using default var names. see https://www.postgresql.org/docs/current/libpq-envars.html
-	if err != nil {
-		slog.ErrorContext(ctx, "pgxpool.New() database connection failed", "error", err)
+	// Database connection
+	conn, err := pgxpool.New(ctx, "") // Default connection string
+	if err != nil || conn.Ping(ctx) != nil {
+		log.Error("Database connection failed", "error", err)
 		os.Exit(1)
 	}
-	err = conn.Ping(ctx)
-	if err != nil {
-		slog.ErrorContext(ctx, "database ping failed", "error", err)
-		os.Exit(1)
-	}
-
 	defer conn.Close()
 
-	db := database.NewDB(conn)
-	srv := service.NewDomainService(db)
-	h := restapi.NewHandler(srv)
+	// Datastore and channels
+	store := datastore.NewDatastore(conn)
+	service := service.NewDomainService(ctx, store)
+
+	h := restapi.NewHandler(service)
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", h))
+
+	srv := &http.Server{
+		Addr:         net.JoinHostPort(host, port),
+		ReadTimeout:  1 * time.Second,
+		WriteTimeout: 1 * time.Second,
+		Handler:      mux,
+	}
+
+	// Error group to manage goroutines
 	eg, ctx := errgroup.WithContext(ctx)
 
-	lisenOnTextMsgs(ctx, srv, eg)
-	listenAndServe(ctx, mux, eg)
+	// Start HTTP server in a separate goroutine
+	eg.Go(func() error {
+		slog.InfoContext(ctx, "Starting HTTP server", "address", srv.Addr)
+		err := srv.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			return err // Only return an error if it's not a normal shutdown
+		}
+		return nil
+	})
+
+	// Listen for shutdown signals
+	<-ctx.Done()
+	slog.WarnContext(ctx, "Shutdown signal received")
+
+	// Create a new context with timeout for shutdown
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	// Gracefully shut down the server
+	slog.InfoContext(shutdownCtx, "Shutting down HTTP server")
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		slog.ErrorContext(shutdownCtx, "Error during server shutdown", "error", err)
+	}
+
+	// Wait for all goroutines to exit
 	if err := eg.Wait(); err != nil {
-		slog.ErrorContext(ctx, "errgroup err", "error", err)
+		slog.ErrorContext(ctx, "Unexpected error during shutdown", "error", err)
 		os.Exit(1)
 	}
-}
 
-func lisenOnTextMsgs(ctx context.Context, srv *service.DomainService, eg *errgroup.Group) {
-	eg.Go(func() error {
-		return srv.RunSmsPoller(ctx)
-	})
-	eg.Go(func() error {
-		return srv.RunPlayNext(ctx)
-	})
-	eg.Go(func() error {
-		<-ctx.Done()
-		slog.WarnContext(
-			ctx,
-			"shutting down sms poller",
-			"contextErr",
-			ctx.Err(),
-		)
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-		defer cancel()
-		return termux.MediaStop(shutdownCtx)
-	})
-}
-
-func listenAndServe(ctx context.Context, h *http.ServeMux, eg *errgroup.Group) {
-	s := &http.Server{
-		Addr:    net.JoinHostPort(c.Host, c.Port),
-		Handler: h,
-	}
-	eg.Go(func() error {
-		slog.InfoContext(ctx, "starting http server", "address", s.Addr)
-		return s.ListenAndServe()
-	})
-
-	eg.Go(func() error {
-		<-ctx.Done()
-		slog.WarnContext(
-			ctx,
-			"shutting down http server",
-			"contextErr",
-			ctx.Err(),
-		)
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-		defer cancel()
-		return s.Shutdown(shutdownCtx)
-	})
+	slog.InfoContext(ctx, "Server shutdown complete")
 }

@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/bgw7/dj/internal"
-	"github.com/bgw7/dj/internal/termux"
+	"github.com/bgw7/dj/internal/youtube"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 type DJRoombaService interface {
-	ListTracks(ctx context.Context) ([]internal.Track, error)
+	GetTracks(ctx context.Context) ([]internal.Track, error)
 	CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error)
 	CreateVote(ctx context.Context) error
 	DeleteVote(ctx context.Context) error
@@ -48,12 +48,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// RESTy routes for domain model
 	r.Route("/tracks", func(r chi.Router) {
 		r.Use(metdataMiddleware)
-		r.Get("/", handleOut(h.service.ListTracks, http.StatusOK))
+		r.Get("/", handleOut(h.service.GetTracks, http.StatusOK))
 		r.Post("/", handleInOut(h.service.CreateTrack, http.StatusCreated))
-		r.Route("/dl", func(r chi.Router) {
+		r.Route("/download", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				url := r.Header.Get("url")
-				v, err := termux.YoutubeDownload(r.Context(), url)
+				v, err := youtube.Download(r.Context(), url)
 				if err != nil {
 					handleError(w, err)
 					return

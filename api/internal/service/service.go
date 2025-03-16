@@ -8,7 +8,7 @@ import (
 )
 
 type DataStorage interface {
-	ListTracks(ctx context.Context) ([]internal.Track, error)
+	GetNextTrack(ctx context.Context) (*internal.Track, error)
 	CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error)
 	UpdateTrack(ctx context.Context, t *internal.Track) error
 	CreateVote(ctx context.Context, v *internal.Vote) error
@@ -19,9 +19,11 @@ type DomainService struct {
 	readMsgs  sync.Map
 }
 
-func NewDomainService(datastore DataStorage) *DomainService {
-	return &DomainService{
+func NewDomainService(ctx context.Context, datastore DataStorage) *DomainService {
+	ds := &DomainService{
 		datastore: datastore,
 		readMsgs:  sync.Map{},
 	}
+	go ds.listenOnTextMsgs(ctx)
+	return ds
 }

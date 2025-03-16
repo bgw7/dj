@@ -1,4 +1,4 @@
-package database
+package datastore
 
 import (
 	"context"
@@ -25,19 +25,22 @@ var votesDelete string
 //go:embed insert.votes.sql
 var votesInsert string
 
-func (db *Database) ListTracks(ctx context.Context) ([]internal.Track, error) {
+func (db *Datastore) GetNextTrack(ctx context.Context) (*internal.Track, error) {
 	rows, err := db.conn.Query(ctx, tracksSelect)
 	if err != nil {
-		return nil, fmt.Errorf("list tracks query failed: %w", err)
+		return nil, fmt.Errorf("get tracks query failed: %w", err)
 	}
-	tracks, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[internal.Track])
+	track, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[internal.Track])
+	if err == pgx.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
-		return nil, fmt.Errorf("ListTracks pgx.CollectRows failed: %w", err)
+		return nil, fmt.Errorf("GetTracks pgx.CollectRows failed: %w", err)
 	}
-	return tracks, nil
+	return &track, nil
 }
 
-func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) (*internal.Track, error) {
+func (db *Datastore) CreateTrack(ctx context.Context, track *internal.Track) (*internal.Track, error) {
 	err := db.conn.QueryRow(
 		ctx,
 		tracksInsert,
@@ -59,7 +62,7 @@ func (db *Database) CreateTrack(ctx context.Context, track *internal.Track) (*in
 	return track, nil
 }
 
-func (db *Database) UpdateTrack(ctx context.Context, track *internal.Track) error {
+func (db *Datastore) UpdateTrack(ctx context.Context, track *internal.Track) error {
 	_, err := db.conn.Exec(
 		ctx,
 		tracksUpdate,
@@ -69,7 +72,7 @@ func (db *Database) UpdateTrack(ctx context.Context, track *internal.Track) erro
 	return err
 }
 
-func (db *Database) DeleteVote(ctx context.Context, v *internal.Vote) error {
+func (db *Datastore) DeleteVote(ctx context.Context, v *internal.Vote) error {
 	_, err := db.conn.Exec(
 		ctx,
 		votesDelete,
@@ -80,7 +83,7 @@ func (db *Database) DeleteVote(ctx context.Context, v *internal.Vote) error {
 	return err
 }
 
-func (db *Database) CreateVote(ctx context.Context, v *internal.Vote) error {
+func (db *Datastore) CreateVote(ctx context.Context, v *internal.Vote) error {
 	_, err := db.conn.Exec(
 		ctx,
 		votesInsert,

@@ -1,4 +1,4 @@
-package database
+package datastore
 
 import (
 	"context"
@@ -13,12 +13,12 @@ type DBIface interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 }
-type Database struct {
+type Datastore struct {
 	conn DBIface
 }
 
-func NewDB(connection DBIface) *Database {
-	return &Database{
+func NewDatastore(connection DBIface) *Datastore {
+	return &Datastore{
 		conn: connection,
 	}
 }
