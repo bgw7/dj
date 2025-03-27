@@ -96,7 +96,6 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 
 func (s *DomainService) saveTrack(ctx context.Context, body string, fromNumber string) error {
 	if !strings.Contains(body, "youtube") {
-		slog.InfoContext(ctx, "shared track does not contain https://y")
 		return nil
 	}
 
