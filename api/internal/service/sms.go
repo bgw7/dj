@@ -106,6 +106,7 @@ func (s *DomainService) saveTrack(ctx context.Context, body string, fromNumber s
 	if err != nil {
 		return fmt.Errorf("failed to download YouTube video: %w", err)
 	}
+	slog.InfoContext(ctx, "YT Download Response", "resp", resp)
 
 	// Create the track object
 	t := &internal.Track{
