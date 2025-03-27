@@ -61,6 +61,7 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 	}
 
 	var obj YTDownloadResponse
+	slog.WarnContext(ctx, "lastline YTDownloadResponse", "lastline", lastLine)
 	err = json.Unmarshal([]byte(lastLine), &obj)
 	if err != nil {
 		slog.ErrorContext(ctx, "json.Unmarshal() error", "error", err)
