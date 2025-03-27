@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"log/slog"
 
 	"github.com/bgw7/dj/internal"
 	"github.com/jackc/pgx/v5"
@@ -37,6 +38,7 @@ func (db *Datastore) GetNextTrack(ctx context.Context) (*internal.Track, error) 
 	if err != nil {
 		return nil, fmt.Errorf("GetTracks pgx.CollectRows failed: %w", err)
 	}
+	slog.InfoContext(ctx, "GetNextTrack", "track", track)
 	return &track, nil
 }
 
@@ -59,6 +61,7 @@ func (db *Datastore) CreateTrack(ctx context.Context, track *internal.Track) (*i
 		}
 		return nil, fmt.Errorf("CreateTrack failed: %w", err)
 	}
+	slog.InfoContext(ctx, "track created", "track", track)
 	return track, nil
 }
 
