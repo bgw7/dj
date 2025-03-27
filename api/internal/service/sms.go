@@ -52,13 +52,14 @@ func getTextMessages(ctx context.Context) ([]TextMessage, error) {
 }
 
 func (s *DomainService) listenOnTextMsgs(ctx context.Context) {
-	slog.InfoContext(ctx, "SMS Poller started")
+	slog.InfoContext(ctx, "SMS Poller started: poll every 3 seconds")
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
+			slog.InfoContext(ctx, "listenOnTextMsgs next ticker")
 			if err := s.checkSMS(ctx); err != nil {
 				slog.ErrorContext(ctx, "checkSMS error", "error", err)
 				audio.Notify(ctx, err.Error())
@@ -78,13 +79,15 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 		return fmt.Errorf("failed to get text messages: %w", err)
 	}
 
-	var eg errgroup.Group
+	eg, egCtx := errgroup.WithContext(ctx)
 	for _, msg := range msgs {
 		// Prevent processing the same message more than once
+		slog.InfoContext(ctx, "check processedMsgs.LoadOrStore")
 		if _, loaded := processedMsgs.LoadOrStore(msg.ID, struct{}{}); !loaded {
+			slog.InfoContext(ctx, "check processedMsgs.LoadOrStore: not loaded, starting routine to save track")
 			eg.Go(func(m TextMessage) func() error {
 				return func() error {
-					return s.saveTrack(ctx, m.Body, m.FromNumber)
+					return s.saveTrack(egCtx, m.Body, m.FromNumber)
 				}
 			}(msg))
 		}
@@ -95,6 +98,7 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 
 func (s *DomainService) saveTrack(ctx context.Context, body string, fromNumber string) error {
 	if !strings.Contains(body, "https://y") {
+		slog.InfoContext(ctx, "shared track does not contain https://y")
 		return nil
 	}
 
