@@ -94,7 +94,7 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 }
 
 func (s *DomainService) saveTrack(ctx context.Context, body string, fromNumber string) error {
-	if !strings.Contains(body, "youtube") {
+	if !strings.Contains(body, "yout") {
 		return nil
 	}
 
