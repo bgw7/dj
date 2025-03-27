@@ -82,7 +82,6 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 		// Prevent processing the same message more than once
 		slog.InfoContext(ctx, "check processedMsgs.LoadOrStore")
 		if _, loaded := processedMsgs.LoadOrStore(msg.ID, struct{}{}); !loaded {
-			slog.InfoContext(ctx, "check processedMsgs.LoadOrStore: not loaded, starting routine to save track")
 			eg.Go(func(m TextMessage) func() error {
 				return func() error {
 					return s.saveTrack(egCtx, m.Body, m.FromNumber)
