@@ -97,10 +97,10 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 }
 
 func (s *DomainService) saveTrack(ctx context.Context, body string, fromNumber string) error {
-	if !strings.Contains(body, "https://y") {
-		slog.InfoContext(ctx, "shared track does not contain https://y")
-		return nil
-	}
+	// if !strings.Contains(body, "https://y") {
+	// 	slog.InfoContext(ctx, "shared track does not contain https://y")
+	// 	return nil
+	// }
 
 	slog.InfoContext(ctx, "Message contains YouTube link", "body", body)
 	url := strings.TrimSpace(body)
