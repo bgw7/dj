@@ -77,14 +77,14 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 		return fmt.Errorf("failed to get text messages: %w", err)
 	}
 
-	eg, egCtx := errgroup.WithContext(ctx)
+	var eg errgroup.Group
 	for _, msg := range msgs {
 		// Prevent processing the same message more than once
 		slog.InfoContext(ctx, "check processedMsgs.LoadOrStore")
 		if _, loaded := processedMsgs.LoadOrStore(msg.ID, struct{}{}); !loaded {
 			eg.Go(func(m TextMessage) func() error {
 				return func() error {
-					return s.saveTrack(egCtx, m.Body, m.FromNumber)
+					return s.saveTrack(context.Background(), m.Body, m.FromNumber)
 				}
 			}(msg))
 		}
