@@ -22,13 +22,14 @@ func (s *DomainService) playNextLoop(ctx context.Context) {
 			if !ok {
 				return
 			}
+			slog.InfoContext(ctx, "playing next", "track", t)
 			t.HasPlayed = true
 			if err := s.datastore.UpdateTrack(ctx, t); err != nil {
 				slog.Error("Failed to update track", "error", err, "track", t.ID)
 				audio.Notify(ctx, err.Error())
 				continue
 			}
-
+			slog.InfoContext(ctx, "select audio.Play", "filename", t.Filename)
 			if err := audio.Play(ctx, t.Filename); err != nil {
 				slog.Error("Failed to play track", "error", err, "trackFilename", t.Filename)
 				audio.Notify(ctx, err.Error())
@@ -54,6 +55,7 @@ func (s *DomainService) playNextLoop(ctx context.Context) {
 			return
 
 		default:
+			slog.InfoContext(ctx, "select default: GetNextTrack")
 			next, err := s.datastore.GetNextTrack(ctx)
 			if err == internal.ErrRecordNotFound {
 				time.Sleep(3 * time.Second)
@@ -65,6 +67,7 @@ func (s *DomainService) playNextLoop(ctx context.Context) {
 				return
 			}
 			if next != nil {
+				slog.InfoContext(ctx, "select default: playing next", "track", next)
 				playNext <- next
 			}
 		}
