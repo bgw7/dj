@@ -58,10 +58,9 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 	}
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
-	slog.WarnContext(ctx, "termux YoutubeDownload cmd.Wait Stderr output:", "stderr", stderr.String())
+	slog.WarnContext(ctx, "termux YoutubeDownload cmd.Wait Stderr output:")
 
 	var obj YTDownloadResponse
-	slog.WarnContext(ctx, "lastline YTDownloadResponse", "lastline", lastLine)
 	err = json.Unmarshal([]byte(lastLine), &obj)
 	if err != nil {
 		slog.ErrorContext(ctx, "json.Unmarshal() error", "error", err)
