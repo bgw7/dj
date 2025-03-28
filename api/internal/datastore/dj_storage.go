@@ -33,7 +33,7 @@ func (db *Datastore) GetNextTrack(ctx context.Context) (*internal.Track, error) 
 	}
 	track, err := pgx.CollectOneRow(rows, pgx.RowToStructByNameLax[internal.Track])
 	if err == pgx.ErrNoRows {
-		return nil, nil
+		return nil, internal.ErrRecordNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("GetTracks pgx.CollectRows failed: %w", err)

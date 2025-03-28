@@ -23,6 +23,9 @@ db-start: db-stop ## Start postgres service and create database
 db-stop: ## Stop postgres service | shut down the database
 	-make -C ./db stop
 
+sql:
+	-make -C ./db sql-adhoc
+
 api-start: ## Start the ./api application
 	make -C ./api start
 
