@@ -30,7 +30,7 @@ func Play(ctx context.Context, mediaFile string) error {
 	fp := filepath.Join("/data/data/com.termux/files/home/storage/shared/Termux_Downloader/Youtube", mediaFile)
 	out, err := exec.CommandContext(ctx, "termux-media-player", "play", fp).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("termux media player play failed. mediaFile:%s : %s\n%w", mediaFile, string(out), err)
+		return fmt.Errorf("termux media player play failed. mediaFile:%s : %s\n%w", fp, string(out), err)
 	}
 	return blockUntilDone(ctx)
 }
