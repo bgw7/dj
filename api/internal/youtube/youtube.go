@@ -55,10 +55,10 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 
 	if err := cmd.Wait(); err != nil {
 		slog.ErrorContext(ctx, "cmd.Wait() error", "error", err)
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-		slog.WarnContext(ctx, "termux YoutubeDownload cmd.Wait Stderr output:", "stderr", stderr.String())
 	}
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	slog.WarnContext(ctx, "termux YoutubeDownload cmd.Wait Stderr output:", "stderr", stderr.String())
 
 	var obj YTDownloadResponse
 	slog.WarnContext(ctx, "lastline YTDownloadResponse", "lastline", lastLine)
