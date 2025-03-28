@@ -5,9 +5,9 @@ type Track struct {
 	Url         string `json:"url"`
 	Filename    string `json:"filename"`
 	VoteCount   int    `json:"voteCount"`
+	CreatedAt   string `json:"createdAt"`
 	HasPlayed   bool   `json:"hasPlayed"`
 	CreatedBy   string `json:"createdBy"`
-	CreatedAt   string `json:"createdAt"`
 	CreatedWith string `json:"createdWith"`
 }
 
