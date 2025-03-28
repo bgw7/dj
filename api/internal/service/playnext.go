@@ -20,7 +20,7 @@ func (s *DomainService) playNextLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			slog.InfoContext(ctx, "case t, ok := <-playNext: playing next", "track", t)
+			slog.InfoContext(ctx, "case t, ok := <-playNext: playing next")
 			next, err := s.datastore.GetNextTrack(ctx)
 			if err == internal.ErrRecordNotFound {
 				time.Sleep(3 * time.Second)
