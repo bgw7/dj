@@ -20,9 +20,10 @@ func (s *DomainService) playNextLoop(ctx context.Context) {
 		select {
 		case t, ok := <-playNext:
 			if !ok {
+				slog.InfoContext(ctx, "select playNext !OK")
 				return
 			}
-			slog.InfoContext(ctx, "playing next", "track", t)
+			slog.InfoContext(ctx, "case t, ok := <-playNext: playing next", "track", t)
 			t.HasPlayed = true
 			if err := s.datastore.UpdateTrack(ctx, t); err != nil {
 				slog.Error("Failed to update track", "error", err, "track", t.ID)

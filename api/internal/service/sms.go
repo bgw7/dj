@@ -82,7 +82,6 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 	var eg errgroup.Group
 	for _, msg := range msgs {
 		// Prevent processing the same message more than once
-		slog.InfoContext(ctx, "check processedMsgs.LoadOrStore")
 		if _, loaded := processedMsgs.LoadOrStore(msg.ID, struct{}{}); !loaded {
 			eg.Go(func(m TextMessage) func() error {
 				return func() error {
