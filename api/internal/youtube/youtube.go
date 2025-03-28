@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -66,6 +67,12 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 		slog.ErrorContext(ctx, "json.Unmarshal() error", "error", err)
 		return nil, fmt.Errorf("termux YoutubeDownload json.Unmarshal failed with youtubeShareLink %s: %w", youtubeShareLink, err)
 	}
+	obj.Filename = changeFileExtension(obj.Filename)
 
 	return &obj, nil
+}
+
+func changeFileExtension(filePath string) string {
+	oldExtension := filepath.Ext(filePath)
+	return strings.TrimSuffix(filePath, oldExtension) + ".mp3"
 }
