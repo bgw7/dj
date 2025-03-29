@@ -2,10 +2,10 @@ package youtube
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"os/exec"
 	"path/filepath"
@@ -55,11 +55,16 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 	}
 
 	if err := cmd.Wait(); err != nil {
-		slog.ErrorContext(ctx, "cmd.Wait() error", "error", err)
+		p, err := cmd.StderrPipe()
+		if err != nil {
+			slog.ErrorContext(ctx, "youtube Download cmd.StderrPipe error", "error", err)
+		}
+		stderr, err := io.ReadAll(p)
+		if err != nil {
+			return nil, err
+		}
+		slog.ErrorContext(ctx, "youtube Download cmd.Wait() error", "error", err, "stderr", stderr)
 	}
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	slog.WarnContext(ctx, "termux YoutubeDownload cmd.Wait Stderr output:", "stderr", stderr.String())
 
 	var obj YTDownloadResponse
 	err = json.Unmarshal([]byte(lastLine), &obj)
