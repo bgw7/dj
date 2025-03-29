@@ -42,12 +42,6 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 		slog.ErrorContext(ctx, "failed cmd.Start()", "error", err)
 		return nil, fmt.Errorf("termux YoutubeDownload cmd.Start failed: %w", err)
 	}
-
-	if err := cmd.Wait(); err != nil {
-		slog.ErrorContext(ctx, "Youtube Download cmd.Wait() error", "error", err, "stderr", stderr.String())
-		return nil, err
-	}
-
 	var lastLine string
 	scanner := bufio.NewScanner(stdout)
 	buf := make([]byte, 0, 64*1024) // 64KB buffer
@@ -59,6 +53,11 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 	if err := scanner.Err(); err != nil {
 		slog.ErrorContext(ctx, "failed scanner.Err()", "error", err)
 		return nil, fmt.Errorf("termux YoutubeDownload scanner.Err failed: %w", err)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		slog.ErrorContext(ctx, "Youtube Download cmd.Wait() error", "error", err, "stderr", stderr.String())
+		return nil, err
 	}
 
 	var obj YTDownloadResponse
