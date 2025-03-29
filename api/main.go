@@ -46,7 +46,7 @@ func main() {
 
 	var mediaDir string
 	var ok bool
-	if mediaDir, ok = os.LookupEnv("YT_OUT_DIR"); !ok {
+	if mediaDir, ok = os.LookupEnv("MEDIA_DIR"); !ok || mediaDir == "" {
 		mediaDir = "/data/data/com.termux/files/home/storage/shared/Termux_Downloader/Youtube"
 	}
 
