@@ -29,6 +29,8 @@ func (y *YTDownloadResponse) CreatedWith() string {
 
 func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {
 	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -39,6 +41,11 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 	if err := cmd.Start(); err != nil {
 		slog.ErrorContext(ctx, "failed cmd.Start()", "error", err)
 		return nil, fmt.Errorf("termux YoutubeDownload cmd.Start failed: %w", err)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		slog.ErrorContext(ctx, "Youtube Download cmd.Wait() error", "error", err, "stderr", stderr.String())
+		return nil, err
 	}
 
 	var lastLine string
@@ -53,13 +60,6 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 		slog.ErrorContext(ctx, "failed scanner.Err()", "error", err)
 		return nil, fmt.Errorf("termux YoutubeDownload scanner.Err failed: %w", err)
 	}
-
-	if err := cmd.Wait(); err != nil {
-		slog.ErrorContext(ctx, "cmd.Wait() error", "error", err)
-	}
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	slog.WarnContext(ctx, "termux YoutubeDownload cmd.Wait Stderr output:", "stderr", stderr.String())
 
 	var obj YTDownloadResponse
 	err = json.Unmarshal([]byte(lastLine), &obj)
