@@ -29,8 +29,7 @@ func (y *YTDownloadResponse) CreatedWith() string {
 
 func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {
 	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		slog.ErrorContext(ctx, "failed cmd.StdoutPipe()", "error", err)
@@ -56,9 +55,11 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 	}
 
 	if err := cmd.Wait(); err != nil {
-		slog.ErrorContext(ctx, "youtube Download cmd.Wait() error", "error", err, "stderr", stderr.String())
-		return nil, err
+		slog.ErrorContext(ctx, "cmd.Wait() error", "error", err)
 	}
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	slog.WarnContext(ctx, "termux YoutubeDownload cmd.Wait Stderr output:", "stderr", stderr.String())
 
 	var obj YTDownloadResponse
 	err = json.Unmarshal([]byte(lastLine), &obj)
