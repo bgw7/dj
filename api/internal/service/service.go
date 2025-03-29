@@ -17,12 +17,14 @@ type DataStorage interface {
 type DomainService struct {
 	datastore DataStorage
 	readMsgs  sync.Map
+	mediaDir  string
 }
 
-func NewDomainService(ctx context.Context, datastore DataStorage) *DomainService {
+func NewDomainService(ctx context.Context, mediaDir string, datastore DataStorage) *DomainService {
 	ds := &DomainService{
 		datastore: datastore,
 		readMsgs:  sync.Map{},
+		mediaDir:  mediaDir,
 	}
 	go ds.listenOnTextMsgs(ctx)
 	go ds.playNextLoop(ctx)

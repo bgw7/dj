@@ -1,6 +1,8 @@
 package audio
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log/slog"
@@ -12,11 +14,26 @@ import (
 )
 
 func MediaInfo(ctx context.Context) (string, error) {
-	out, err := exec.CommandContext(ctx, "termux-media-player", "info").CombinedOutput()
+	cmd := exec.CommandContext(ctx, "termux-media-player", "info")
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+	err := cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("termux media info failed: %s\n %w", string(out), err)
+		return "", fmt.Errorf("termux media info failed: %w", err)
 	}
-	return string(out), nil
+	var lastLine string
+	scanner := bufio.NewScanner(&stdout)
+	buf := make([]byte, 0, 64*1024) // 64KB buffer
+	scanner.Buffer(buf, 1024*1024)  // Max buffer size is 1MB
+	for scanner.Scan() {
+		lastLine = scanner.Text()
+	}
+
+	if err := scanner.Err(); err != nil {
+		slog.ErrorContext(ctx, "failed scanner.Err()", "error", err)
+		return "", fmt.Errorf("termux YoutubeDownload scanner.Err failed: %w", err)
+	}
+	return lastLine, nil
 }
 
 func Stop(ctx context.Context) {
@@ -26,8 +43,8 @@ func Stop(ctx context.Context) {
 	}
 }
 
-func Play(ctx context.Context, mediaFile string) error {
-	fp := filepath.Join("/data/data/com.termux/files/home/storage/shared/Termux_Downloader/Youtube", mediaFile)
+func Play(ctx context.Context, mediaDir, mediaFile string) error {
+	fp := filepath.Join(mediaDir, mediaFile)
 	out, err := exec.CommandContext(ctx, "termux-media-player", "play", fp).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("termux media player play failed. mediaFile:%s : %s\n%w", fp, string(out), err)
@@ -105,6 +122,7 @@ func blockUntilDone(ctx context.Context) error {
 			if done {
 				return nil
 			}
+			slog.InfoContext(ctx, "waiting for audio play to complete", "timeRemaining", delay)
 			ticker.Reset(delay)
 		}
 	}

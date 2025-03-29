@@ -44,9 +44,15 @@ func main() {
 	}
 	defer conn.Close()
 
+	var mediaDir string
+	var ok bool
+	if mediaDir, ok = os.LookupEnv("YT_OUT_DIR"); !ok {
+		mediaDir = "/data/data/com.termux/files/home/storage/shared/Termux_Downloader/Youtube"
+	}
+
 	// Datastore and channels
 	store := datastore.NewDatastore(conn)
-	service := service.NewDomainService(ctx, store)
+	service := service.NewDomainService(ctx, mediaDir, store)
 
 	h := restapi.NewHandler(service)
 

@@ -37,10 +37,11 @@ func (s *DomainService) playNextLoop(ctx context.Context) {
 				audio.Notify(ctx, err.Error())
 				continue
 			}
-			slog.InfoContext(ctx, "select audio.Play", "filename", next.Filename)
-			if err := audio.Play(ctx, next.Filename); err != nil {
+			slog.InfoContext(ctx, "starting audio play", "filename", next.Filename)
+			if err := audio.Play(ctx, s.mediaDir, next.Filename); err != nil {
 				slog.Error("Failed to play track", "error", err, "trackFilename", next.Filename)
 				audio.Notify(ctx, err.Error())
+				continue
 			}
 
 		case <-ctx.Done():
