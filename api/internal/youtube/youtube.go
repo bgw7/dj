@@ -36,6 +36,11 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 		return nil, fmt.Errorf("termux YoutubeDownload StdoutPipe failed: %w", err)
 	}
 
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		slog.ErrorContext(ctx, "youtube Download cmd.StderrPipe error", "error", err)
+	}
+
 	if err := cmd.Start(); err != nil {
 		slog.ErrorContext(ctx, "failed cmd.Start()", "error", err)
 		return nil, fmt.Errorf("termux YoutubeDownload cmd.Start failed: %w", err)
@@ -55,11 +60,7 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 	}
 
 	if err := cmd.Wait(); err != nil {
-		p, err := cmd.StderrPipe()
-		if err != nil {
-			slog.ErrorContext(ctx, "youtube Download cmd.StderrPipe error", "error", err)
-		}
-		stderr, err := io.ReadAll(p)
+		stderr, err := io.ReadAll(stderr)
 		if err != nil {
 			return nil, err
 		}
