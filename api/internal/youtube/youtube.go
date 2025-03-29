@@ -2,7 +2,6 @@ package youtube
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -29,10 +28,6 @@ func (y *YTDownloadResponse) CreatedWith() string {
 
 func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {
 	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink)
-
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		slog.ErrorContext(ctx, "failed cmd.StdoutPipe()", "error", err)
@@ -58,7 +53,7 @@ func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse
 	}
 
 	if err := cmd.Wait(); err != nil {
-		slog.ErrorContext(ctx, "youtube Download cmd.Wait() error", "error", err, "stderr", stderr.String())
+		slog.ErrorContext(ctx, "youtube Download cmd.Wait() error", "error", err)
 		return nil, err
 	}
 
