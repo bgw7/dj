@@ -54,7 +54,7 @@ func main() {
 	store := datastore.NewDatastore(conn)
 	service := service.NewDomainService(ctx, mediaDir, store)
 
-	h := restapi.NewHandler(service)
+	h := restapi.NewHandler(service, mediaDir)
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/", http.StripPrefix("/api", h))

@@ -25,12 +25,14 @@ type Service interface {
 }
 
 type Handler struct {
-	service Service
+	service  Service
+	mediaDir string
 }
 
-func NewHandler(s Service) *Handler {
+func NewHandler(s Service, mediaDir string) *Handler {
 	return &Handler{
-		service: s,
+		service:  s,
+		mediaDir: mediaDir,
 	}
 }
 
@@ -53,7 +55,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r.Route("/download", func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				url := r.Header.Get("url")
-				v, err := youtube.Download(r.Context(), url)
+				v, err := youtube.Download(r.Context(), h.mediaDir.url)
 				if err != nil {
 					handleError(w, err)
 					return
