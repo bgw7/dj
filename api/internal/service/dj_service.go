@@ -6,6 +6,7 @@ import (
 
 	"github.com/bgw7/dj/internal"
 	"github.com/bgw7/dj/internal/appcontext"
+	"github.com/bgw7/dj/internal/youtube"
 )
 
 func (s *DomainService) GetTracks(ctx context.Context) ([]internal.Track, error) {
@@ -33,6 +34,11 @@ func (s *DomainService) CreateTrack(ctx context.Context, t *internal.Track) (*in
 	return t, nil
 }
 
+func (s *DomainService) Download(ctx context.Context, req internal.DownloadRequest) error {
+	r, err := youtube.Download(ctx, s.mediaDir, req.URL)
+	println(r)
+	return err
+}
 func (s *DomainService) CreateVote(ctx context.Context) error {
 	v, err := appcontext.FromContext[*internal.Vote](ctx, appcontext.DJRoombaVoteCTXKey)
 	if err != nil {

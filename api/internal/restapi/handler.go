@@ -3,17 +3,16 @@ package restapi
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/bgw7/dj/internal"
-	"github.com/bgw7/dj/internal/youtube"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 type DJRoombaService interface {
+	Download(ctx context.Context, url internal.DownloadRequest) error
 	GetTracks(ctx context.Context) ([]internal.Track, error)
 	CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error)
 	CreateVote(ctx context.Context) error
@@ -53,21 +52,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r.Get("/", handleOut(h.service.GetTracks, http.StatusOK))
 		r.Post("/", handleInOut(h.service.CreateTrack, http.StatusCreated))
 		r.Route("/download", func(r chi.Router) {
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				url := r.Header.Get("url")
-				v, err := youtube.Download(r.Context(), h.mediaDir, url)
-				if err != nil {
-					handleError(w, err)
-					return
-				}
-				fmt.Println(v)
-				w.WriteHeader(http.StatusOK)
-				err = json.NewEncoder(w).Encode(v)
-				if err != nil {
-					handleError(w, err)
-					return
-				}
-			})
+			r.Post("/", handleIn(h.service.Download, http.StatusOK))
 		})
 		r.Route("/{trackId}/votes", func(r chi.Router) {
 			r.Use(djRoombaVoteMiddleware)
@@ -79,6 +64,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 type targetFunc[In any, Out any] func(context.Context, In) (Out, error)
+type targetInFunc[In any] func(context.Context, In) error
 type targetOutFunc[Out any] func(context.Context) (Out, error)
 
 func handleInOut[In any, Out any](f targetFunc[In, Out], code int) http.HandlerFunc {
@@ -112,6 +98,30 @@ func handleInOut[In any, Out any](f targetFunc[In, Out], code int) http.HandlerF
 	})
 }
 
+func handleIn[In any](f targetInFunc[In], code int) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var in In
+
+		// Retrieve data from request.
+		err := json.NewDecoder(r.Body).Decode(&in)
+		if err != nil {
+			// Format error response
+			handleError(w, err)
+			return
+		}
+
+		// Call out to target function
+		err = f(r.Context(), in)
+		if err != nil {
+			handleError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(code)
+	})
+}
+
 func handleOut[Out any](f targetOutFunc[Out], code int) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		out, err := f(r.Context())
@@ -140,6 +150,5 @@ func handleNil(f func(context.Context) error, code int) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(code)
-		return
 	})
 }

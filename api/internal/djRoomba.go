@@ -18,3 +18,8 @@ type Vote struct {
 	Url      string `json:"url"`
 	VoterID  string `json:"voterId"`
 }
+
+
+type DownloadRequest struct {
+	URL string `json:"url"`
+}
