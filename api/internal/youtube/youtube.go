@@ -84,6 +84,7 @@ func Download(ctx context.Context, mediaDir string, youtubeShareLink string) (*Y
 		return nil, fmt.Errorf("termux YoutubeDownload json.Unmarshal failed with youtubeShareLink %s: %w", youtubeShareLink, err)
 	}
 	obj.Filename = changeFileExtension(obj.Filename)
+	slog.InfoContext(ctx, "youtube download complete", "downloadedFile", obj.Filename)
 
 	return &obj, nil
 }

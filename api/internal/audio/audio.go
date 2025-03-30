@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -44,7 +43,8 @@ func Stop(ctx context.Context) {
 }
 
 func Play(ctx context.Context, mediaDir, mediaFile string) error {
-	fp := filepath.Join(mediaDir, mediaFile)
+	// fp := filepath.Join(mediaDir, mediaFile)
+	fp := mediaFile
 	out, err := exec.CommandContext(ctx, "termux-media-player", "play", fp).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("termux media player play failed. mediaFile:%s : %s\n%w", fp, string(out), err)
