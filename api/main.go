@@ -50,6 +50,8 @@ func main() {
 		mediaDir = "/data/data/com.termux/files/home/storage/shared/Termux_Downloader/Youtube"
 	}
 
+	slog.InfoContext(ctx, "Media Directroy Set", "mediaDirLocation", mediaDir)
+
 	// Datastore and channels
 	store := datastore.NewDatastore(conn)
 	service := service.NewDomainService(ctx, mediaDir, store)
