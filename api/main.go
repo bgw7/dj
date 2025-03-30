@@ -19,7 +19,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const shutdownTimeout = 5 * time.Second
+const shutdownTimeout = 7 * time.Second
 
 func main() {
 	// Initialize flags and logger

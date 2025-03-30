@@ -13,10 +13,13 @@ import (
 func (s *DomainService) playNextLoop(ctx context.Context) {
 	slog.InfoContext(ctx, "starting playNextLoop", "os", runtime.GOOS)
 	ctxWithTimeout, cancelTimeout := context.WithTimeout(context.Background(), 2*time.Second)
+	defer func() {
+		slog.Info("DEFER FROM playNextLoop")
+	}()
 	defer audio.Stop(ctxWithTimeout)
 	defer cancelTimeout()
 
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
