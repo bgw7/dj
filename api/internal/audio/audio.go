@@ -113,7 +113,7 @@ func blockUntilDone(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			slog.Info("context done case statement from blockUntilDone")
+			Stop(context.Background())
 			return ctx.Err()
 		case <-ticker.C:
 			delay, done, err := remainingPlayTime(ctx)
