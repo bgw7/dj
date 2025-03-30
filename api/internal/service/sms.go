@@ -103,7 +103,7 @@ func (s *DomainService) saveTrack(ctx context.Context, body string, fromNumber s
 	url := strings.TrimSpace(body)
 
 	// Download the YouTube video
-	resp, err := youtube.Download(ctx, url)
+	resp, err := youtube.Download(ctx, s.mediaDir, url)
 	if err != nil {
 		return fmt.Errorf("failed to download YouTube video: %w", err)
 	}

@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+var yt_dlp_args = []string{""}
+
 type Version struct {
 	Version    string `json:"version"`
 	Repository string `json:"repository"`
@@ -27,8 +29,23 @@ func (y *YTDownloadResponse) CreatedWith() string {
 	return strings.Join([]string{"", y.Version.Repository, y.Version.Version}, "-")
 }
 
-func Download(ctx context.Context, youtubeShareLink string) (*YTDownloadResponse, error) {
-	cmd := exec.CommandContext(ctx, "termux-url-opener", youtubeShareLink)
+func Download(ctx context.Context, mediaDir string, youtubeShareLink string) (*YTDownloadResponse, error) {
+	slog.InfoContext(ctx, "starting youtube Download", "youtubeShareLink", youtubeShareLink)
+	output := filepath.Join(mediaDir, "%(title)s.%(ext)s")
+	cmd := exec.CommandContext(ctx,
+		"yt-dlp",
+		"--no-playlist",
+		"--output '"+output+"'",
+		"--restrict-filenames",
+		"--trim-filenames 250",
+		"--no-cache-dir",
+		"--dump-json",
+		"--no-simulate",
+		"--audio-quality 0",
+		"--audio-format mp3",
+		"--extract-audio",
+		youtubeShareLink,
+	)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
