@@ -49,7 +49,7 @@ func (h *Handler) setupRoutes() {
 		r.Get("/", handleOut(h.service.GetTracks, http.StatusOK))
 		r.Post("/", handleInOut(h.service.CreateTrack, http.StatusCreated))
 		r.Route("/download", func(r chi.Router) {
-			r.Use(timeoutHandler(200 * time.Second))
+			r.Use(timeoutHandler(20 * time.Second))
 			r.Post("/", handleIn(h.service.Download, http.StatusOK))
 		})
 		r.Route("/{trackId}/vote", func(r chi.Router) {
