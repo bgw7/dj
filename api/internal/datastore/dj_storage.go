@@ -14,6 +14,9 @@ import (
 //go:embed select.tracks_all.sql
 var tracksSelectAll string
 
+//go:embed select.track.sql
+var tracksSelectOne string
+
 //go:embed select.tracks.sql
 var tracksSelect string
 
@@ -28,6 +31,28 @@ var votesDelete string
 
 //go:embed insert.votes.sql
 var votesInsert string
+
+func (db *Datastore) GetTrackByID(ctx context.Context, id int) (*internal.Track, error) {
+	var track internal.Track
+	err := db.conn.QueryRow(
+		ctx,
+		tracksSelectOne,
+		id,
+	).Scan(
+		&track.ID,
+		&track.Url,
+		&track.Filename,
+	)
+
+	if err == pgx.ErrNoRows {
+		return nil, internal.ErrRecordNotFound
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return &track, nil
+}
 
 func (db *Datastore) GetTracks(ctx context.Context) ([]internal.Track, error) {
 	rows, err := db.conn.Query(ctx, tracksSelectAll)
@@ -93,13 +118,11 @@ func (db *Datastore) UpdateTrack(ctx context.Context, track *internal.Track) err
 	return err
 }
 
-func (db *Datastore) DeleteVote(ctx context.Context, v *internal.Vote) error {
+func (db *Datastore) DeleteVote(ctx context.Context, id int) error {
 	_, err := db.conn.Exec(
 		ctx,
 		votesDelete,
-		v.TrackID,
-		v.Url,
-		v.VoterID,
+		id,
 	)
 	return err
 }
@@ -108,7 +131,7 @@ func (db *Datastore) CreateVote(ctx context.Context, v *internal.Vote) error {
 	_, err := db.conn.Exec(
 		ctx,
 		votesInsert,
-		v.TrackID,
+		v.Filename,
 		v.Url,
 		v.VoterID,
 	)

@@ -18,15 +18,17 @@ func (s *DomainService) GetNextTrack(ctx context.Context) (*internal.Track, erro
 }
 
 func (s *DomainService) CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error) {
-	m, err := appcontext.FromContext[*internal.Metadata](ctx, appcontext.MetadataCTXKey)
-	if err != nil {
-		return nil, err
+	m, ok := appcontext.GetMetadata(ctx)
+
+	if !ok {
+		return nil, internal.ErrCtxKeyNotFound
 	}
+
 	t.CreatedBy = m.CreatedBy
 
 	if t, err := s.datastore.CreateTrack(ctx, t); err != nil {
 		if errors.Is(err, internal.ErrUniqueConstraintViolation) {
-			return t, s.datastore.CreateVote(ctx, &internal.Vote{TrackID: t.ID, Url: t.Url, VoterID: t.CreatedBy})
+			return t, s.datastore.CreateVote(ctx, &internal.Vote{Filename: t.Filename, Url: t.Url, VoterID: t.CreatedBy})
 		}
 		return nil, err
 
@@ -50,17 +52,27 @@ func (s *DomainService) Download(ctx context.Context, req *internal.DownloadRequ
 	return nil
 }
 func (s *DomainService) CreateVote(ctx context.Context) error {
-	v, err := appcontext.FromContext[*internal.Vote](ctx, appcontext.DJRoombaVoteCTXKey)
+	v, ok := appcontext.GetVoteRequest(ctx)
+	if !ok {
+		return internal.ErrCtxKeyNotFound
+	}
+
+	t, err := s.datastore.GetTrackByID(ctx, v.TrackID)
 	if err != nil {
 		return err
 	}
-	return s.datastore.CreateVote(ctx, v)
+
+	return s.datastore.CreateVote(ctx, &internal.Vote{
+		Filename: t.Filename,
+		Url:      t.Url,
+		VoterID:  v.VoterID,
+	})
 }
 
 func (s *DomainService) DeleteVote(ctx context.Context) error {
-	v, err := appcontext.FromContext[*internal.Vote](ctx, appcontext.DJRoombaVoteCTXKey)
-	if err != nil {
-		return err
+	v, ok := appcontext.GetVoteRequest(ctx)
+	if !ok {
+		return internal.ErrCtxKeyNotFound
 	}
-	return s.datastore.DeleteVote(ctx, v)
+	return s.datastore.DeleteVote(ctx, v.ID)
 }

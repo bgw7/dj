@@ -17,13 +17,14 @@ CREATE TABLE IF NOT EXISTS tracks (
 );
 
 CREATE TABLE IF NOT EXISTS votes (
-  track_id BIGINT NOT NULL,
+  id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  filename VARCHAR(250) NOT NULL,
   url VARCHAR(500) NOT NULL,
   voter_id VARCHAR(100) NOT NULL,
   CONSTRAINT fk_tracks_votes
-    FOREIGN KEY(track_id)
-      REFERENCES tracks (id),
-  UNIQUE(track_id, voter_id)
+    FOREIGN KEY(filename, url)
+      REFERENCES tracks (filename, url),
+  UNIQUE(filename, url, voter_id)
 );
 
 GRANT ALL ON TABLE tracks TO api_user WITH GRANT OPTION;

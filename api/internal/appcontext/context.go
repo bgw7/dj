@@ -2,30 +2,35 @@ package appcontext
 
 import (
 	"context"
-	"errors"
-	"fmt"
+
+	"github.com/bgw7/dj/internal"
 )
 
-type contextKey struct {
-	name string
-}
+type ctxKey string
 
-func (k *contextKey) String() string {
-	return "app context value " + k.name
-}
-
-var (
-	MetadataCTXKey     = &contextKey{"Metadata"}
-	DJRoombaVoteCTXKey = &contextKey{"DJRoombaVote"}
+const (
+	VoteKey     ctxKey = "voteRequest"
+	MetadataKey ctxKey = "metadata"
 )
 
-var ErrCtxKeyNotFound = errors.New("key not found in context")
+// SetVoteRequest stores a VoteRequest in the context.
+func SetVoteRequest(ctx context.Context, vote *internal.VoteRequest) context.Context {
+	return context.WithValue(ctx, VoteKey, vote)
+}
 
-func FromContext[T interface{}](ctx context.Context, key *contextKey) (T, error) {
-	val, ok := ctx.Value(key).(T)
-	if !ok {
-		var val T
-		return val, fmt.Errorf("%s not found: %w", key, ErrCtxKeyNotFound)
-	}
-	return val, nil
+// GetVoteRequest retrieves a VoteRequest from the context.
+func GetVoteRequest(ctx context.Context) (*internal.VoteRequest, bool) {
+	vote, ok := ctx.Value(VoteKey).(*internal.VoteRequest)
+	return vote, ok
+}
+
+// SetMetadata stores Metadata in the context.
+func SetMetadata(ctx context.Context, metadata *internal.Metadata) context.Context {
+	return context.WithValue(ctx, MetadataKey, metadata)
+}
+
+// GetMetadata retrieves Metadata from the context.
+func GetMetadata(ctx context.Context) (*internal.Metadata, bool) {
+	meta, ok := ctx.Value(MetadataKey).(*internal.Metadata)
+	return meta, ok
 }

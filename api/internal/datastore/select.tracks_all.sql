@@ -1,9 +1,10 @@
 WITH votes as (
 	SELECT
-		track_id,
+		filename,
+		url,
 		count(*) as vote_count
 		FROM track_voting.votes
-		GROUP BY track_id
+		GROUP BY filename, url
 )
 SELECT
 	t.id,
@@ -14,7 +15,8 @@ SELECT
 FROM
 	track_voting.tracks t
 LEFT JOIN votes v 
-	ON t.id = v.track_id
+	ON t.filename = v.filename
+	and t.url = v.url
 WHERE
 	t.has_played = false
 order by v.vote_count desc, t.created_at desc
