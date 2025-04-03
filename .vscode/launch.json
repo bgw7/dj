@@ -10,7 +10,10 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "env": {
+                "MEDIA_DIR": "~/Downloads/audio"
+            }
         },
         {
             "name": "acceptance_test.go",
@@ -19,7 +22,9 @@
             "mode": "auto",
             "program": "${fileDirname}",
             "envFile": "${workspaceFolder}/.env",
-            "args": ["-godog.tags=@essential"]
+            "args": [
+                "-godog.tags=@essential"
+            ]
         }
     ]
 }

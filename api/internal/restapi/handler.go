@@ -54,8 +54,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r.Route("/download", func(r chi.Router) {
 			r.Post("/", handleIn(h.service.Download, http.StatusOK))
 		})
-		r.Route("/{trackId}/votes", func(r chi.Router) {
-			r.Use(djRoombaVoteMiddleware)
+		r.Route("/{trackId}/vote", func(r chi.Router) {
+			r.Use(voteMiddleware)
 			r.Post("/", handleNil(h.service.CreateVote, http.StatusCreated))
 			r.Delete("/", handleNil(h.service.DeleteVote, http.StatusOK))
 		})

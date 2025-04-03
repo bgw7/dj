@@ -18,5 +18,4 @@ LEFT JOIN votes v
 WHERE
 	t.has_played = false
 order by v.vote_count desc, t.created_at desc
-limit 1
 ;

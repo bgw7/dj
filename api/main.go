@@ -106,14 +106,11 @@ func main() {
 	slog.WarnContext(gracefulCtx, "Shutting down HTTP server")
 	if err := srv.Shutdown(gracefulCtx); err != nil {
 		slog.ErrorContext(gracefulCtx, "Error during server shutdown", "error", err)
-		cancelWithCause(err) // Attach shutdown error to cause
 	}
 
 	// Wait for all goroutines to finish before final logging
 	if err := eg.Wait(); err != nil {
 		slog.ErrorContext(ctx, "Unexpected error during shutdown", "error", err)
-		cancelWithCause(err) // Attach error cause
-		os.Exit(1)
 	}
 
 	slog.InfoContext(ctx, "Shutdown complete")

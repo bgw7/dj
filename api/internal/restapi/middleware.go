@@ -11,26 +11,24 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func djRoombaVoteMiddleware(next http.Handler) http.Handler {
+func voteMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "trackId")
-		_, err := strconv.Atoi(id)
+		trackId, err := strconv.Atoi(id)
 		if err != nil {
 			handleError(w, fmt.Errorf("invalid trackID: %s", id))
 			return
 		}
 		ctx := context.WithValue(r.Context(), appcontext.DJRoombaVoteCTXKey, &internal.Vote{
-			//TODO: get voter props from datastore
-			// TrackID: trackID,
+			TrackID: trackId,
 			VoterID: r.Host,
 		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
 func metdataMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// create new context from `r` request context, and assign key `"metadataCTXKey"`
-		// to value of `"internal.Metadata"`
 		client := r.Host // TODO: user from a validated authorization token
 		ctx := context.WithValue(r.Context(), appcontext.MetadataCTXKey, &internal.Metadata{
 			CreatedBy: client,

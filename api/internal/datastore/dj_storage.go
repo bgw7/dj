@@ -11,6 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+//go:embed select.tracks_all.sql
+var tracksSelectAll string
+
 //go:embed select.tracks.sql
 var tracksSelect string
 
@@ -26,6 +29,21 @@ var votesDelete string
 //go:embed insert.votes.sql
 var votesInsert string
 
+func (db *Datastore) GetTracks(ctx context.Context) ([]internal.Track, error) {
+	rows, err := db.conn.Query(ctx, tracksSelectAll)
+	if err != nil {
+		return nil, fmt.Errorf("get tracks query failed: %w", err)
+	}
+	tracks, err := pgx.CollectRows(rows, pgx.RowToStructByNameLax[internal.Track])
+	if err == pgx.ErrNoRows {
+		return nil, internal.ErrRecordNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("GetTracks pgx.CollectRows failed: %w", err)
+	}
+	slog.InfoContext(ctx, "GetTracks", "trackCount", len(tracks))
+	return tracks, nil
+}
 func (db *Datastore) GetNextTrack(ctx context.Context) (*internal.Track, error) {
 	rows, err := db.conn.Query(ctx, tracksSelect)
 	if err != nil {
@@ -79,7 +97,7 @@ func (db *Datastore) DeleteVote(ctx context.Context, v *internal.Vote) error {
 	_, err := db.conn.Exec(
 		ctx,
 		votesDelete,
-		v.Filename,
+		v.TrackID,
 		v.Url,
 		v.VoterID,
 	)
@@ -90,7 +108,7 @@ func (db *Datastore) CreateVote(ctx context.Context, v *internal.Vote) error {
 	_, err := db.conn.Exec(
 		ctx,
 		votesInsert,
-		v.Filename,
+		v.TrackID,
 		v.Url,
 		v.VoterID,
 	)

@@ -10,7 +10,7 @@ import (
 )
 
 func (s *DomainService) GetTracks(ctx context.Context) ([]internal.Track, error) {
-	return nil, errors.New("not implements")
+	return s.datastore.GetTracks(ctx)
 }
 
 func (s *DomainService) GetNextTrack(ctx context.Context) (*internal.Track, error) {
@@ -26,7 +26,7 @@ func (s *DomainService) CreateTrack(ctx context.Context, t *internal.Track) (*in
 
 	if t, err := s.datastore.CreateTrack(ctx, t); err != nil {
 		if errors.Is(err, internal.ErrUniqueConstraintViolation) {
-			return t, s.datastore.CreateVote(ctx, &internal.Vote{Filename: t.Filename, Url: t.Url, VoterID: t.CreatedBy})
+			return t, s.datastore.CreateVote(ctx, &internal.Vote{TrackID: t.ID, Url: t.Url, VoterID: t.CreatedBy})
 		}
 		return nil, err
 
@@ -36,8 +36,18 @@ func (s *DomainService) CreateTrack(ctx context.Context, t *internal.Track) (*in
 
 func (s *DomainService) Download(ctx context.Context, req *internal.DownloadRequest) error {
 	r, err := youtube.Download(ctx, s.mediaDir, req.URL)
-	println(r)
-	return err
+	if err != nil {
+		return err
+	}
+	_, err = s.CreateTrack(ctx, &internal.Track{
+		Url:         r.Url,
+		Filename:    r.Filename,
+		CreatedWith: r.CreatedWith(),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 func (s *DomainService) CreateVote(ctx context.Context) error {
 	v, err := appcontext.FromContext[*internal.Vote](ctx, appcontext.DJRoombaVoteCTXKey)

@@ -8,6 +8,7 @@ import (
 )
 
 type DataStorage interface {
+	GetTracks(ctx context.Context) ([]internal.Track, error)
 	GetNextTrack(ctx context.Context) (*internal.Track, error)
 	CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error)
 	UpdateTrack(ctx context.Context, t *internal.Track) error

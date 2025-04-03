@@ -14,9 +14,9 @@ type Track struct {
 }
 
 type Vote struct {
-	Filename string `json:"filename"`
-	Url      string `json:"url"`
-	VoterID  string `json:"voterId"`
+	TrackID int    `json:"trackId"`
+	Url     string `json:"url"`
+	VoterID string `json:"voterId"`
 }
 
 type DownloadRequest struct {
