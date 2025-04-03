@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/bgw7/dj/internal"
 	"github.com/bgw7/dj/internal/appcontext"
@@ -77,11 +76,4 @@ func voteIDMiddleware(next http.Handler) http.Handler {
 		ctx := appcontext.SetVoteRequest(r.Context(), voteReq)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
-}
-
-// TimeoutHandler is a middleware to add http.TimeoutHandler.
-func timeoutHandler(timeout time.Duration) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.TimeoutHandler(next, timeout, "Timeout.")
-	}
 }

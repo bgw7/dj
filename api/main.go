@@ -76,7 +76,7 @@ func main() {
 	srv := &http.Server{
 		Addr:         net.JoinHostPort(host, port),
 		ReadTimeout:  1 * time.Second,
-		WriteTimeout: 1 * time.Second,
+		WriteTimeout: 20 * time.Second,
 		Handler:      mux,
 	}
 
