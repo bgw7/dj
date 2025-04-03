@@ -12,7 +12,7 @@ import (
 )
 
 type DJRoombaService interface {
-	Download(ctx context.Context, url internal.DownloadRequest) error
+	Download(ctx context.Context, url *internal.DownloadRequest) error
 	GetTracks(ctx context.Context) ([]internal.Track, error)
 	CreateTrack(ctx context.Context, t *internal.Track) (*internal.Track, error)
 	CreateVote(ctx context.Context) error

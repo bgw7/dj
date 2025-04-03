@@ -15,8 +15,8 @@ func (k *contextKey) String() string {
 }
 
 var (
-	MetadataCTXKey     = &contextKey{"MetadataContext"}
-	DJRoombaVoteCTXKey = &contextKey{"DJRoombaVoteContext"}
+	MetadataCTXKey     = &contextKey{"Metadata"}
+	DJRoombaVoteCTXKey = &contextKey{"DJRoombaVote"}
 )
 
 var ErrCtxKeyNotFound = errors.New("key not found in context")

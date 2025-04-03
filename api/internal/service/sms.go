@@ -52,20 +52,19 @@ func getTextMessages(ctx context.Context) ([]TextMessage, error) {
 }
 
 func (s *DomainService) listenOnTextMsgs(ctx context.Context) {
-	slog.InfoContext(ctx, "SMS Poller started: poll every 3 seconds")
+	slog.InfoContext(ctx, "SMS Poller started: checking messages every 3 seconds")
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
-			slog.InfoContext(ctx, "listenOnTextMsgs next ticker")
 			if err := s.checkSMS(ctx); err != nil {
 				slog.ErrorContext(ctx, "checkSMS error", "error", err)
 				audio.Notify(ctx, err.Error())
 			}
 		case <-ctx.Done():
-			slog.InfoContext(ctx, "Shutting down SMS Poller")
+			slog.WarnContext(ctx, "Shutting down SMS Poller", "contextErr", ctx.Err())
 			return
 		}
 	}
@@ -95,11 +94,10 @@ func (s *DomainService) checkSMS(ctx context.Context) error {
 }
 
 func (s *DomainService) saveTrack(ctx context.Context, body string, fromNumber string) error {
-	if !strings.Contains(body, "yout") {
+	if !strings.Contains(body, "http") {
 		return nil
 	}
 
-	slog.InfoContext(ctx, "Message contains YouTube link", "body", body)
 	url := strings.TrimSpace(body)
 
 	// Download the YouTube video
@@ -107,7 +105,6 @@ func (s *DomainService) saveTrack(ctx context.Context, body string, fromNumber s
 	if err != nil {
 		return fmt.Errorf("failed to download YouTube video: %w", err)
 	}
-	slog.InfoContext(ctx, "YT Download Response", "resp", resp)
 
 	// Create the track object
 	t := &internal.Track{

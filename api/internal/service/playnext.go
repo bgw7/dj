@@ -42,7 +42,7 @@ func (s *DomainService) playNextLoop(ctx context.Context) {
 			}
 
 		case <-ctx.Done():
-			slog.Info("Shutting down playNextLoop")
+			slog.WarnContext(ctx, "Shutting down playNextLoop", "contextErr", ctx.Err())
 			return
 		}
 	}

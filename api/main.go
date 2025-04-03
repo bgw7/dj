@@ -32,29 +32,41 @@ func main() {
 	logger := slog.New(handler).With("serviceName", "dj-roomba")
 	slog.SetDefault(logger)
 
-	// Set up context with cancellation
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
+	// Create a parent context with CancelCauseFunc
+	rootCtx, cancelWithCause := context.WithCancelCause(context.Background())
+	defer cancelWithCause(nil) // Ensure cleanup
+
+	// Listen for termination signals
+	signalCtx, signalCancel := signal.NotifyContext(rootCtx, syscall.SIGINT, syscall.SIGTERM)
+	defer signalCancel()
 
 	// Database connection
-	conn, err := pgxpool.New(ctx, "") // Default connection string
-	if err != nil || conn.Ping(ctx) != nil {
-		log.Error("Database connection failed", "error", err)
+	conn, err := pgxpool.New(signalCtx, "")
+	if err != nil {
+		log.Error("Database connection initialization failed", "error", err)
+		cancelWithCause(err) // Attach error cause
+		os.Exit(1)
+	}
+
+	if pingErr := conn.Ping(signalCtx); pingErr != nil {
+		log.Error("Database ping failed", "error", pingErr)
+		cancelWithCause(pingErr) // Attach error cause
+		conn.Close()             // Ensure proper cleanup before exit
 		os.Exit(1)
 	}
 	defer conn.Close()
 
-	var mediaDir string
-	var ok bool
-	if mediaDir, ok = os.LookupEnv("MEDIA_DIR"); !ok || mediaDir == "" {
+	// Set up media directory
+	mediaDir, ok := os.LookupEnv("MEDIA_DIR")
+	if !ok || mediaDir == "" {
 		mediaDir = "/data/data/com.termux/files/home/storage/shared/Termux_Downloader/Youtube"
 	}
 
-	slog.InfoContext(ctx, "Media Directroy Set", "mediaDirLocation", mediaDir)
+	slog.InfoContext(signalCtx, "Media Directory Set", "mediaDirLocation", mediaDir)
 
-	// Datastore and channels
+	// Datastore and service initialization
 	store := datastore.NewDatastore(conn)
-	service := service.NewDomainService(ctx, mediaDir, store)
+	service := service.NewDomainService(signalCtx, mediaDir, store)
 
 	h := restapi.NewHandler(service, mediaDir)
 
@@ -69,37 +81,40 @@ func main() {
 	}
 
 	// Error group to manage goroutines
-	eg, ctx := errgroup.WithContext(ctx)
+	eg, ctx := errgroup.WithContext(signalCtx)
 
 	// Start HTTP server in a separate goroutine
 	eg.Go(func() error {
 		slog.InfoContext(ctx, "Starting HTTP server", "address", srv.Addr)
 		err := srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			return err // Only return an error if it's not a normal shutdown
+			cancelWithCause(err) // Attach error cause to cancellation
+			return err
 		}
 		return nil
 	})
 
-	// Listen for shutdown signals
-	<-ctx.Done()
-	slog.WarnContext(ctx, "Shutdown signal received")
+	// Wait for shutdown signal
+	<-signalCtx.Done()
+	slog.WarnContext(ctx, "Shutdown signal received", "cause", context.Cause(signalCtx))
 
-	// Create a new context with timeout for shutdown
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
+	// Create a timeout context for graceful shutdown
+	gracefulCtx, gracefulCancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer gracefulCancel()
 
 	// Gracefully shut down the server
-	slog.InfoContext(shutdownCtx, "Shutting down HTTP server")
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.ErrorContext(shutdownCtx, "Error during server shutdown", "error", err)
+	slog.WarnContext(gracefulCtx, "Shutting down HTTP server")
+	if err := srv.Shutdown(gracefulCtx); err != nil {
+		slog.ErrorContext(gracefulCtx, "Error during server shutdown", "error", err)
+		cancelWithCause(err) // Attach shutdown error to cause
 	}
 
-	// Wait for all goroutines to exit
+	// Wait for all goroutines to finish before final logging
 	if err := eg.Wait(); err != nil {
 		slog.ErrorContext(ctx, "Unexpected error during shutdown", "error", err)
+		cancelWithCause(err) // Attach error cause
 		os.Exit(1)
 	}
 
-	slog.InfoContext(ctx, "Server shutdown complete")
+	slog.InfoContext(ctx, "Shutdown complete")
 }
