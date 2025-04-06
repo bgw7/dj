@@ -51,7 +51,7 @@ func getTextMessages(ctx context.Context) ([]TextMessage, error) {
 	return msgs, nil
 }
 
-func (s *DomainService) listenOnTextMsgs(ctx context.Context) {
+func (s *DomainService) pollForTracks(ctx context.Context) {
 	slog.InfoContext(ctx, "SMS Poller started: checking messages every 3 seconds")
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()

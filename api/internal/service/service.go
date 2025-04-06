@@ -28,7 +28,7 @@ func NewDomainService(ctx context.Context, mediaDir string, datastore DataStorag
 		readMsgs:  sync.Map{},
 		mediaDir:  mediaDir,
 	}
-	go ds.listenOnTextMsgs(ctx)
+	go ds.pollForTracks(ctx)
 	go ds.playNextLoop(ctx)
 	return ds
 }

@@ -8,6 +8,6 @@ import (
 	"runtime"
 )
 
-func (s *DomainService) listenOnTextMsgs(ctx context.Context) {
+func (s *DomainService) pollForTracks(ctx context.Context) {
 	slog.InfoContext(ctx, "starting listenOnTextMsgs no-op", "os", runtime.GOOS)
 }
